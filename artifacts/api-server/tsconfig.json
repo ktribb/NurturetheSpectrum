@@ -6,7 +6,8 @@
                         "types": ["node"],
                         "esModuleInterop": true,
                         "allowSyntheticDefaultImports": true,
-                        "noEmitOnError": false
+                        "noEmitOnError": true
+
           },
           "include": ["src"]
 }
