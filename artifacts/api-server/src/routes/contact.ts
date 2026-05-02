@@ -15,7 +15,8 @@ router.post("/contact", async (req, res) => {
     const contactEmail = process.env.CONTACT_EMAIL || "admin@nurturethespectrum.com";
 
     // Log the contact form submission (in production, send an email)
-    req.log.info({ name, email, contactEmail }, "Contact form submission received");
+    // Do not log attacker-controlled fields (name, email, message) to prevent log flooding
+    req.log.info({ contactEmail }, "Contact form submission received");
 
     // In production, integrate with an email service here
     // For now, we log it and return success

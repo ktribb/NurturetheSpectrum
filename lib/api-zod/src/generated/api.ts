@@ -138,28 +138,28 @@ export const GetListingBySlugResponse = zod.object({
  * @summary Submit a new listing for review
  */
 export const SubmitListingBody = zod.object({
-  name: zod.string(),
-  type: zod.string(),
-  city: zod.string(),
-  county: zod.string(),
-  specializations: zod.array(zod.string()).optional(),
-  certifications: zod.array(zod.string()).optional(),
-  website: zod.string().optional(),
-  email: zod.string(),
-  phone: zod.string().optional(),
-  hourlyRate: zod.string().optional(),
-  yearsExperience: zod.number().nullish(),
-  description: zod.string(),
-  logoUrl: zod.string().optional(),
+  name: zod.string().min(1).max(200),
+  type: zod.enum(["Agency", "Individual", "Platform"]),
+  city: zod.string().min(1).max(100),
+  county: zod.enum(["Philadelphia", "Delaware County", "Bucks County", "Chester County"]),
+  specializations: zod.array(zod.string().max(100)).max(20).optional(),
+  certifications: zod.array(zod.string().max(100)).max(20).optional(),
+  website: zod.string().url().max(500).optional(),
+  email: zod.string().email().max(254),
+  phone: zod.string().max(30).optional(),
+  hourlyRate: zod.string().max(50).optional(),
+  yearsExperience: zod.number().int().min(0).max(100).nullish(),
+  description: zod.string().min(1).max(2000),
+  logoUrl: zod.string().url().max(500).optional(),
 });
 
 /**
  * @summary Submit a contact form message
  */
 export const SubmitContactBody = zod.object({
-  name: zod.string(),
-  email: zod.string(),
-  message: zod.string(),
+  name: zod.string().min(1).max(200),
+  email: zod.string().email().max(254),
+  message: zod.string().min(1).max(5000),
 });
 
 export const SubmitContactResponse = zod.object({

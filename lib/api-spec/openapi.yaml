@@ -509,34 +509,56 @@ components:
       properties:
         name:
           type: string
+          minLength: 1
+          maxLength: 200
         type:
           type: string
+          enum: [Agency, Individual, Platform]
         city:
           type: string
+          minLength: 1
+          maxLength: 100
         county:
           type: string
+          enum: [Philadelphia, "Delaware County", "Bucks County", "Chester County"]
         specializations:
           type: array
+          maxItems: 20
           items:
             type: string
+            maxLength: 100
         certifications:
           type: array
+          maxItems: 20
           items:
             type: string
+            maxLength: 100
         website:
           type: string
+          format: uri
+          maxLength: 500
         email:
           type: string
+          format: email
+          maxLength: 254
         phone:
           type: string
+          maxLength: 30
         hourlyRate:
           type: string
+          maxLength: 50
         yearsExperience:
           type: ["integer", "null"]
+          minimum: 0
+          maximum: 100
         description:
           type: string
+          minLength: 1
+          maxLength: 2000
         logoUrl:
           type: string
+          format: uri
+          maxLength: 500
       required:
         - name
         - type
@@ -599,10 +621,16 @@ components:
       properties:
         name:
           type: string
+          minLength: 1
+          maxLength: 200
         email:
           type: string
+          format: email
+          maxLength: 254
         message:
           type: string
+          minLength: 1
+          maxLength: 5000
       required:
         - name
         - email

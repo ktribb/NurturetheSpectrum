@@ -18,18 +18,23 @@ function generateSlug(name: string): string {
 }
 
 async function uniqueSlug(base: string): Promise<string> {
-  let slug = base;
-  let count = 0;
-  while (true) {
-    const existing = await db
-      .select({ id: listingsTable.id })
-      .from(listingsTable)
-      .where(eq(listingsTable.slug, slug))
-      .limit(1);
-    if (existing.length === 0) return slug;
+  const rows = await db
+    .select({ slug: listingsTable.slug })
+    .from(listingsTable)
+    .where(
+      sql`${listingsTable.slug} = ${base} OR ${listingsTable.slug} LIKE ${base + "-%"}`
+    );
+
+  if (rows.length === 0) return base;
+
+  const taken = new Set(rows.map((r) => r.slug));
+  if (!taken.has(base)) return base;
+
+  let count = 1;
+  while (taken.has(`${base}-${count}`)) {
     count++;
-    slug = `${base}-${count}`;
   }
+  return `${base}-${count}`;
 }
 
 function serializeListing(row: typeof listingsTable.$inferSelect) {
