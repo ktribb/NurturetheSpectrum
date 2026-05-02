@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import CsvImportDialog from "@/components/admin/CsvImportDialog";
 import { 
   useAdminGetMe, 
   getAdminGetMeQueryKey,
@@ -17,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Users, CheckCircle, Clock, XCircle, Trash2, Edit, Check } from "lucide-react";
+import { LogOut, Users, CheckCircle, Clock, XCircle, Trash2, Edit, Check, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -41,6 +42,7 @@ export default function AdminDashboard() {
 
   const [statusTab, setStatusTab] = useState<string>("All");
   const [page, setPage] = useState(1);
+  const [importOpen, setImportOpen] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useAdminGetDashboard();
   const { data: listingsData, isLoading: listingsLoading, refetch } = useAdminGetListings({
@@ -111,7 +113,10 @@ export default function AdminDashboard() {
             <Shield className="w-5 h-5 text-primary" />
             <h1 className="font-bold text-lg">Admin Dashboard</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+              <Upload className="w-4 h-4 mr-2" /> Import CSV
+            </Button>
             <Button variant="outline" size="sm" asChild>
               <a href="/api/admin/export/listings" target="_blank" download>
                 Export CSV
@@ -242,6 +247,14 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </main>
+
+      <CsvImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onSuccess={() => {
+          refetch();
+        }}
+      />
     </div>
   );
 }

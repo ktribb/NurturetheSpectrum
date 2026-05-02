@@ -413,6 +413,150 @@ router.patch("/admin/listings/:id", requireAdmin, async (req, res) => {
   }
 });
 
+// Import CSV
+router.post("/admin/import-csv", requireAdmin, async (req, res) => {
+  try {
+    const { csv } = req.body as { csv?: string };
+    if (!csv || typeof csv !== "string") {
+      res.status(400).json({ error: "CSV content is required" });
+      return;
+    }
+
+    const lines = csv.split(/\r?\n/).filter((l) => l.trim());
+    if (lines.length < 2) {
+      res.status(400).json({ error: "CSV must have a header row and at least one data row" });
+      return;
+    }
+
+    function parseCSVLine(line: string): string[] {
+      const fields: string[] = [];
+      let current = "";
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === "," && !inQuotes) {
+          fields.push(current.trim());
+          current = "";
+        } else {
+          current += ch;
+        }
+      }
+      fields.push(current.trim());
+      return fields;
+    }
+
+    function normalizeType(raw: string): "Agency" | "Individual" | "Platform" {
+      const v = raw.trim().toLowerCase();
+      if (v === "agency") return "Agency";
+      if (v === "platform") return "Platform";
+      return "Individual";
+    }
+
+    function normalizeCounty(raw: string): "Philadelphia" | "Delaware County" | "Bucks County" | "Chester County" {
+      const v = raw.toLowerCase();
+      if (v.includes("delaware")) return "Delaware County";
+      if (v.includes("bucks")) return "Bucks County";
+      if (v.includes("chester")) return "Chester County";
+      return "Philadelphia";
+    }
+
+    function splitList(raw: string): string[] {
+      if (!raw.trim()) return [];
+      return raw.split(/[;,]/).map((s) => s.trim()).filter(Boolean);
+    }
+
+    const headers = parseCSVLine(lines[0]).map((h) => h.toLowerCase().trim());
+
+    function col(row: string[], name: string): string {
+      const idx = headers.indexOf(name);
+      return idx >= 0 ? (row[idx] ?? "").trim() : "";
+    }
+
+    const results = { imported: 0, skipped: 0, errors: [] as string[] };
+
+    for (let i = 1; i < lines.length; i++) {
+      const row = parseCSVLine(lines[i]);
+      if (row.every((c) => !c)) continue; // blank row
+
+      const name = col(row, "name");
+      if (!name) {
+        results.errors.push(`Row ${i + 1}: missing Name, skipped`);
+        results.skipped++;
+        continue;
+      }
+
+      const rawCityCounty = col(row, "city/county");
+      // If it contains a comma, split into city and county; otherwise use as both
+      let city = rawCityCounty;
+      let county = normalizeCounty(rawCityCounty);
+      if (rawCityCounty.includes(",")) {
+        const parts = rawCityCounty.split(",");
+        city = parts[0].trim();
+        county = normalizeCounty(parts.slice(1).join(","));
+      }
+      if (!city) city = "Philadelphia";
+
+      const rawEmail = col(row, "email");
+      const email = rawEmail || `contact@${name.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
+
+      const notes = col(row, "notes");
+      const contactStatus = col(row, "contact status");
+      const descriptionParts = [notes, contactStatus ? `Contact Status: ${contactStatus}` : ""].filter(Boolean);
+      const description = descriptionParts.join(" | ") || `${name} is a caregiver serving the Philadelphia metro area.`;
+
+      const yearsRaw = col(row, "years experience");
+      const yearsExperience = yearsRaw ? parseInt(yearsRaw, 10) || null : null;
+
+      try {
+        const baseSlug = generateSlug(name);
+        const slug = await uniqueSlug(baseSlug);
+
+        await db.insert(listingsTable).values({
+          name,
+          slug,
+          type: normalizeType(col(row, "type")),
+          city,
+          county,
+          specializations: splitList(col(row, "specialization")),
+          certifications: splitList(col(row, "certifications")),
+          website: col(row, "website") || null,
+          email,
+          phone: col(row, "phone") || null,
+          hourlyRate: col(row, "hourly rate") || null,
+          yearsExperience,
+          description,
+          logoUrl: null,
+          tier: "Free",
+          status: "Published",
+        });
+        results.imported++;
+      } catch (rowErr: unknown) {
+        const msg = rowErr instanceof Error ? rowErr.message : String(rowErr);
+        results.errors.push(`Row ${i + 1} (${name}): ${msg}`);
+        results.skipped++;
+      }
+    }
+
+    res.json({
+      success: true,
+      imported: results.imported,
+      skipped: results.skipped,
+      errors: results.errors,
+      message: `Imported ${results.imported} listing${results.imported !== 1 ? "s" : ""}. ${results.skipped > 0 ? `Skipped ${results.skipped}.` : ""}`,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to import CSV");
+    res.status(500).json({ error: "Failed to import CSV" });
+  }
+});
+
 // Delete listing
 router.delete("/admin/listings/:id", requireAdmin, async (req, res) => {
   try {
