@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { FloatingFeedback } from "@/components/floating-feedback";
 import NotFound from "@/pages/not-found";
 
 import Home from "@/pages/home";
@@ -26,6 +27,7 @@ function WithPublicLayout({ children }: { children: React.ReactNode }) {
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
+      <FloatingFeedback />
     </div>
   );
 }

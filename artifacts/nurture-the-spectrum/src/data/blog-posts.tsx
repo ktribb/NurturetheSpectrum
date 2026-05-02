@@ -45,7 +45,7 @@ const AgencyCard = ({
         </span>
       ))}
       {certTags?.map((t) => (
-        <span key={t} className="inline-block bg-accent/15 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">
+        <span key={t} className="inline-block bg-accent/15 text-accent-foreground text-xs font-semibold px-3 py-1 rounded-full">
           {t}
         </span>
       ))}
@@ -92,7 +92,7 @@ const Post1Content = () => (
     <p>We've researched and compiled the top autism and special needs nanny agencies across <strong>Philadelphia, Delaware County, Bucks County, and Chester County</strong>. Each agency below has been selected for its specialization in autism and neurodivergent childcare, certified or trained staff, and track record serving Philadelphia-area families.</p>
 
     <div className="bg-accent/10 border-l-4 border-accent rounded-r-lg px-5 py-4 my-6 not-prose">
-      <p className="text-sm text-foreground/80"><strong className="text-amber-700">Pro tip:</strong> When contacting any agency, ask specifically about ABA training, BCBA supervision, and experience with your child's specific diagnosis. The more specific you are, the better match you'll get.</p>
+      <p className="text-sm text-foreground/80"><strong className="text-accent-foreground">Pro tip:</strong> When contacting any agency, ask specifically about ABA training, BCBA supervision, and experience with your child's specific diagnosis. The more specific you are, the better match you'll get.</p>
     </div>
 
     <div className="not-prose">
@@ -167,7 +167,7 @@ const Post2Content = () => (
     <p>Delaware may be small, but its autism services network is substantial. From BCBA-supervised in-home ABA providers to statewide advocacy organizations, the agencies below serve families across <strong>New Castle County, Kent County, and Sussex County</strong>.</p>
 
     <div className="bg-accent/10 border-l-4 border-accent rounded-r-lg px-5 py-4 my-6 not-prose">
-      <p className="text-sm text-foreground/80"><strong className="text-amber-700">Delaware families:</strong> Delaware's Division of Developmental Disabilities Services (DDDS) administers Medicaid waivers that can fund in-home supports for eligible children with autism. Ask any agency below whether they accept DDDS waiver funding before paying out of pocket.</p>
+      <p className="text-sm text-foreground/80"><strong className="text-accent-foreground">Delaware families:</strong> Delaware's Division of Developmental Disabilities Services (DDDS) administers Medicaid waivers that can fund in-home supports for eligible children with autism. Ask any agency below whether they accept DDDS waiver funding before paying out of pocket.</p>
     </div>
 
     <div className="not-prose">
@@ -241,7 +241,7 @@ const Post3Content = () => (
     <p>Families in <strong>Bel Air, Aberdeen, Edgewood, Elkton, Havre de Grace</strong>, and surrounding communities have more options than many realize. Here's where to start.</p>
 
     <div className="bg-accent/10 border-l-4 border-accent rounded-r-lg px-5 py-4 my-6 not-prose">
-      <p className="text-sm text-foreground/80"><strong className="text-amber-700">Maryland families:</strong> Maryland's Autism Waiver program funds in-home and community-based supports for eligible children with autism. Ask every agency whether they are an approved Maryland Autism Waiver provider — it can significantly reduce your out-of-pocket costs.</p>
+      <p className="text-sm text-foreground/80"><strong className="text-accent-foreground">Maryland families:</strong> Maryland's Autism Waiver program funds in-home and community-based supports for eligible children with autism. Ask every agency whether they are an approved Maryland Autism Waiver provider — it can significantly reduce your out-of-pocket costs.</p>
     </div>
 
     <div className="not-prose">
@@ -313,7 +313,7 @@ const Post4Content = () => (
     <p>Whether you're in <strong>Cherry Hill, Marlton, Vineland, Somers Point</strong>, or anywhere in between, these are the providers worth contacting first.</p>
 
     <div className="bg-accent/10 border-l-4 border-accent rounded-r-lg px-5 py-4 my-6 not-prose">
-      <p className="text-sm text-foreground/80"><strong className="text-amber-700">New Jersey families:</strong> New Jersey's CAH (Community Care Waiver) and the NJ Autism Registry connect families with funded in-home services. New Jersey also has a strong autism mandate law requiring insurance coverage for ABA therapy. Ask every agency whether they accept your insurance and whether they can help you access NJ state funding.</p>
+      <p className="text-sm text-foreground/80"><strong className="text-accent-foreground">New Jersey families:</strong> New Jersey's CAH (Community Care Waiver) and the NJ Autism Registry connect families with funded in-home services. New Jersey also has a strong autism mandate law requiring insurance coverage for ABA therapy. Ask every agency whether they accept your insurance and whether they can help you access NJ state funding.</p>
     </div>
 
     <div className="not-prose">
