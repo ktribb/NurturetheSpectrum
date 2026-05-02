@@ -11,6 +11,7 @@ import {
   useAdminLogout,
   Listing
 } from "@workspace/api-client-react";
+import { clearAdminToken } from "@/lib/admin-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -74,7 +75,14 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
-      onSuccess: () => setLocation("/admin")
+      onSuccess: () => {
+        clearAdminToken();
+        setLocation("/admin");
+      },
+      onError: () => {
+        clearAdminToken();
+        setLocation("/admin");
+      }
     });
   };
 

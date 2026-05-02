@@ -22,9 +22,27 @@ function generateToken(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
+function extractToken(req: Request): string | null {
+  // Check cookie first
+  const cookieToken = req.cookies?.[ADMIN_SESSION_TOKEN];
+  if (cookieToken) return cookieToken;
+
+  // Check x-admin-token header
+  const headerToken = req.headers["x-admin-token"];
+  if (headerToken) return headerToken as string;
+
+  // Check Authorization: Bearer <token>
+  const authHeader = req.headers["authorization"];
+  if (authHeader?.startsWith("Bearer ")) {
+    return authHeader.slice(7);
+  }
+
+  return null;
+}
+
 function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-  const token = req.cookies?.[ADMIN_SESSION_TOKEN] || req.headers["x-admin-token"];
-  if (!token || !activeSessions.has(token as string)) {
+  const token = extractToken(req);
+  if (!token || !activeSessions.has(token)) {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
@@ -119,9 +137,9 @@ router.post("/admin/login", async (req, res) => {
 
 // Admin logout
 router.post("/admin/logout", (req, res) => {
-  const token = req.cookies?.[ADMIN_SESSION_TOKEN] || req.headers["x-admin-token"];
+  const token = extractToken(req);
   if (token) {
-    activeSessions.delete(token as string);
+    activeSessions.delete(token);
   }
   res.clearCookie(ADMIN_SESSION_TOKEN);
   res.json({ success: true, message: "Logged out successfully" });
@@ -129,8 +147,8 @@ router.post("/admin/logout", (req, res) => {
 
 // Check session
 router.get("/admin/me", (req, res) => {
-  const token = req.cookies?.[ADMIN_SESSION_TOKEN] || req.headers["x-admin-token"];
-  const authenticated = !!(token && activeSessions.has(token as string));
+  const token = extractToken(req);
+  const authenticated = !!(token && activeSessions.has(token));
   res.json({ authenticated });
 });
 

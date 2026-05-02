@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAdminLogin } from "@workspace/api-client-react";
+import { setAdminToken } from "@/lib/admin-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,13 +16,19 @@ export default function AdminLogin() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     loginMutation.mutate({ data: { password } }, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        // Save token to localStorage so it's sent on all subsequent API requests
+        const token = (data as { token?: string })?.token;
+        if (token) {
+          setAdminToken(token);
+        }
         setLocation("/admin/dashboard");
       },
       onError: (err) => {
-        setError(err.error || "Invalid password");
+        const apiError = err as { data?: { error?: string }; message?: string };
+        setError(apiError?.data?.error || apiError?.message || "Invalid password");
       }
     });
   };
@@ -39,13 +46,14 @@ export default function AdminLogin() {
         <CardContent className="pt-4">
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Input 
-                type="password" 
-                placeholder="Password" 
+              <Input
+                type="password"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={error ? "border-destructive focus-visible:ring-destructive" : ""}
                 required
+                autoComplete="current-password"
               />
               {error && <p className="text-sm text-destructive font-medium">{error}</p>}
             </div>

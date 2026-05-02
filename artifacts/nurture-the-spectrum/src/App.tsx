@@ -18,9 +18,9 @@ import AdminDashboard from "@/pages/admin/dashboard";
 
 const queryClient = new QueryClient();
 
-function PublicLayout({ children }: { children: React.ReactNode }) {
+function WithPublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col flex-1">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
@@ -28,40 +28,34 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function AdminLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen flex flex-col flex-1 bg-gray-50 dark:bg-gray-900">
-      <main className="flex-1">{children}</main>
-    </div>
-  );
-}
-
 function Router() {
   return (
     <Switch>
-      <Route path="/admin" nest>
-        <AdminLayout>
-          <Switch>
-            <Route path="/" component={AdminLogin} />
-            <Route path="/dashboard" component={AdminDashboard} />
-            <Route component={NotFound} />
-          </Switch>
-        </AdminLayout>
+      {/* Admin routes — no public navbar/footer */}
+      <Route path="/admin/dashboard" component={AdminDashboard} />
+      <Route path="/admin" component={AdminLogin} />
+
+      {/* Public routes */}
+      <Route path="/">
+        <WithPublicLayout><Home /></WithPublicLayout>
+      </Route>
+      <Route path="/directory/:slug">
+        <WithPublicLayout><ListingDetail /></WithPublicLayout>
+      </Route>
+      <Route path="/directory">
+        <WithPublicLayout><Directory /></WithPublicLayout>
+      </Route>
+      <Route path="/submit">
+        <WithPublicLayout><SubmitListing /></WithPublicLayout>
+      </Route>
+      <Route path="/about">
+        <WithPublicLayout><About /></WithPublicLayout>
+      </Route>
+      <Route path="/contact">
+        <WithPublicLayout><Contact /></WithPublicLayout>
       </Route>
 
-      <Route path="/" nest>
-        <PublicLayout>
-          <Switch>
-            <Route path="/" component={Home} />
-            <Route path="/directory" component={Directory} />
-            <Route path="/directory/:slug" component={ListingDetail} />
-            <Route path="/submit" component={SubmitListing} />
-            <Route path="/about" component={About} />
-            <Route path="/contact" component={Contact} />
-            <Route component={NotFound} />
-          </Switch>
-        </PublicLayout>
-      </Route>
+      <Route component={NotFound} />
     </Switch>
   );
 }
