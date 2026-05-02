@@ -57,26 +57,6 @@ export default function AdminDashboard() {
   const deleteMutation = useAdminDeleteListing();
   const logoutMutation = useAdminLogout();
 
-  const currentIds = (listingsData?.listings ?? []).map((l: Listing) => l.id);
-  const allSelected = currentIds.length > 0 && currentIds.every((id) => selectedIds.has(id));
-  const someSelected = currentIds.some((id) => selectedIds.has(id));
-
-  const toggleAll = () => {
-    if (allSelected) {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        currentIds.forEach((id) => next.delete(id));
-        return next;
-      });
-    } else {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        currentIds.forEach((id) => next.add(id));
-        return next;
-      });
-    }
-  };
-
   const toggleOne = (id: number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -240,13 +220,7 @@ export default function AdminDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-10">
-                        <Checkbox
-                          checked={allSelected ? true : someSelected ? "indeterminate" : false}
-                          onCheckedChange={toggleAll}
-                          aria-label="Select all"
-                        />
-                      </TableHead>
+                      <TableHead className="w-10" />
                       <TableHead>Name</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Location</TableHead>
