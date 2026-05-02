@@ -11,7 +11,7 @@ The public site allows anonymous visitors to browse published caregiver listings
 - **Admin access and session state** — the admin password and any session tokens grant full control over listing approval, import, export, creation, update, and deletion.
 - **Provider contact and profile data** — listings contain email addresses, phone numbers, descriptions, websites, and other business/profile information. Some of this data is intentionally public, while submission-time contact data and pending listings are more sensitive.
 - **Directory integrity** — published listings and tiers influence user trust and business reputation. Unauthorized creation, approval, deletion, or tampering would directly affect the site’s credibility.
-- **Operational availability** — unauthenticated submission and contact endpoints can be abused to flood the database, logs, or moderation queue.
+- **Operational availability** — unauthenticated public endpoints can be abused both for write-side flooding and for read-side resource exhaustion against the listings dataset.
 - **Application secrets** — `DATABASE_URL`, `ADMIN_PASSWORD`, and any future third-party API keys must remain outside client code and outside committed source/config where possible.
 - **Visitor communications** — when visitors use inquiry or contact flows, the system must not let attacker-controlled listing content alter the intended recipient set or prefilled message content.
 
@@ -31,7 +31,7 @@ The public site allows anonymous visitors to browse published caregiver listings
 - **Highest-risk code areas:** `artifacts/api-server/src/routes/admin.ts`, `artifacts/api-server/src/routes/listings.ts`, `artifacts/api-server/src/routes/contact.ts`, `artifacts/nurture-the-spectrum/src/pages/listing.tsx`, `lib/api-client-react/src/custom-fetch.ts`
 - **Public surfaces:** `/api/listings`, `/api/listings/featured`, `/api/listings/stats`, `/api/listings/:slug`, `/api/listings/submit`, `/api/contact`
 - **Authenticated/admin surfaces:** all `/api/admin/*` routes and the `/admin` frontend pages
-- **Public abuse hot spots:** anonymous form posts to `/api/contact` and `/api/listings/submit`, plus published listing data that later feeds `mailto:` or external-navigation sinks
+- **Public abuse hot spots:** anonymous form posts to `/api/contact` and `/api/listings/submit`, plus unauthenticated read endpoints `/api/listings` and `/api/listings/stats` where pagination, filtering, and aggregation must stay bounded at the database layer
 - **Usually dev-only:** `artifacts/mockup-sandbox/**`
 
 ## Threat Categories
@@ -50,7 +50,7 @@ The application stores provider contact information and accepts contact form sub
 
 ### Denial of Service
 
-The public submission and contact endpoints are reachable without authentication and can write to persistent storage or logs. The system must apply rate limiting or equivalent abuse controls so attackers cannot cheaply flood the moderation queue, database, or operational logs. Because normal browser form posts are not stopped by CORS, public write endpoints must not rely on CORS alone as an abuse-control boundary when they accept simple form-encodable payloads.
+The public submission and contact endpoints are reachable without authentication and can write to persistent storage or logs. The public listings read endpoints are also unauthenticated and must not perform full-table scans, unbounded pagination, or in-memory aggregation work that scales with total dataset size per request. The system must apply rate limiting or equivalent abuse controls where appropriate, keep query parameters bounded, and push pagination, filtering, and aggregation down to the database so attackers cannot cheaply exhaust CPU, memory, or database capacity. Because normal browser form posts are not stopped by CORS, public write endpoints must not rely on CORS alone as an abuse-control boundary when they accept simple form-encodable payloads.
 
 ### Elevation of Privilege
 
