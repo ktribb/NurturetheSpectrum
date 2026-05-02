@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, AlertCircle, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getAdminToken } from "@/lib/admin-auth";
+
 
 interface ImportResult {
   success: boolean;
@@ -131,13 +131,10 @@ export default function CsvImportDialog({ open, onOpenChange, onSuccess }: CsvIm
     if (!csvText) return;
     setImporting(true);
     try {
-      const token = getAdminToken();
       const resp = await fetch("/api/admin/import-csv", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ csv: csvText }),
       });
       const data: ImportResult = await resp.json();

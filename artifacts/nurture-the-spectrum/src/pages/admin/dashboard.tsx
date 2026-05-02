@@ -11,7 +11,7 @@ import {
   useAdminLogout,
   Listing,
 } from "@workspace/api-client-react";
-import { clearAdminToken, getAdminToken } from "@/lib/admin-auth";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -89,13 +89,10 @@ export default function AdminDashboard() {
     if (!confirm(`Delete ${ids.length} selected listing${ids.length !== 1 ? "s" : ""}? This cannot be undone.`)) return;
     setBulkDeleting(true);
     try {
-      const token = getAdminToken();
       const resp = await fetch("/api/admin/listings", {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids }),
       });
       const data = await resp.json();
@@ -115,8 +112,8 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
-      onSuccess: () => { clearAdminToken(); setLocation("/admin"); },
-      onError: () => { clearAdminToken(); setLocation("/admin"); },
+      onSuccess: () => { setLocation("/admin"); },
+      onError: () => { setLocation("/admin"); },
     });
   };
 

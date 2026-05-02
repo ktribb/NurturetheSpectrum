@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAdminLogin } from "@workspace/api-client-react";
-import { setAdminToken } from "@/lib/admin-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,12 +17,7 @@ export default function AdminLogin() {
     setError("");
 
     loginMutation.mutate({ data: { password } }, {
-      onSuccess: (data) => {
-        // Save token to localStorage so it's sent on all subsequent API requests
-        const token = (data as { token?: string })?.token;
-        if (token) {
-          setAdminToken(token);
-        }
+      onSuccess: () => {
         setLocation("/admin/dashboard");
       },
       onError: (err) => {

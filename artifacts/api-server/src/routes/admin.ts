@@ -1,6 +1,8 @@
+import crypto from "crypto";
 import { Router, type Request, type Response, type NextFunction } from "express";
+import rateLimit from "express-rate-limit";
 import { db, listingsTable } from "@workspace/db";
-import { eq, and, desc, sql, count, inArray } from "drizzle-orm";
+import { eq, desc, sql, inArray } from "drizzle-orm";
 import {
   AdminLoginBody,
   AdminGetListingsQueryParams,
@@ -13,30 +15,39 @@ import {
 
 const router = Router();
 
-// Simple in-memory session store (cookie-based token)
-// In production, use a proper session store
 const ADMIN_SESSION_TOKEN = "nts_admin_session";
 const activeSessions = new Set<string>();
 
+const loginRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many login attempts. Please try again later." },
+  skipSuccessfulRequests: false,
+});
+
 function generateToken(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  try {
+    const aBuf = Buffer.from(a, "utf8");
+    const bBuf = Buffer.from(b, "utf8");
+    if (aBuf.length !== bBuf.length) {
+      crypto.timingSafeEqual(aBuf, aBuf);
+      return false;
+    }
+    return crypto.timingSafeEqual(aBuf, bBuf);
+  } catch {
+    return false;
+  }
 }
 
 function extractToken(req: Request): string | null {
-  // Check cookie first
   const cookieToken = req.cookies?.[ADMIN_SESSION_TOKEN];
   if (cookieToken) return cookieToken;
-
-  // Check x-admin-token header
-  const headerToken = req.headers["x-admin-token"];
-  if (headerToken) return headerToken as string;
-
-  // Check Authorization: Bearer <token>
-  const authHeader = req.headers["authorization"];
-  if (authHeader?.startsWith("Bearer ")) {
-    return authHeader.slice(7);
-  }
-
   return null;
 }
 
@@ -96,42 +107,53 @@ function serializeListing(row: typeof listingsTable.$inferSelect) {
   };
 }
 
-// Admin login
-router.post("/admin/login", async (req, res) => {
+// Admin login — rate-limited, timing-safe, minimum response delay
+router.post("/admin/login", loginRateLimiter, async (req, res) => {
+  const loginStart = Date.now();
+  const MIN_RESPONSE_MS = 300;
+
+  async function respond(statusCode: number, body: object) {
+    const elapsed = Date.now() - loginStart;
+    const remaining = MIN_RESPONSE_MS - elapsed;
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+    res.status(statusCode).json(body);
+  }
+
   try {
     const parsed = AdminLoginBody.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: "Password is required" });
+      await respond(400, { error: "Password is required" });
       return;
     }
 
     const adminPassword = process.env.ADMIN_PASSWORD;
     if (!adminPassword) {
-      res.status(500).json({ error: "Admin password not configured" });
+      req.log.error("ADMIN_PASSWORD environment variable is not set");
+      await respond(500, { error: "Admin authentication is not configured" });
       return;
     }
 
-    if (parsed.data.password !== adminPassword) {
-      res.status(401).json({ error: "Invalid password" });
+    if (!timingSafeEqual(parsed.data.password, adminPassword)) {
+      await respond(401, { error: "Invalid password" });
       return;
     }
 
     const token = generateToken();
     activeSessions.add(token);
 
-    // Set cookie
     res.cookie(ADMIN_SESSION_TOKEN, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
-    // Also return token in response for clients that can't use cookies
-    res.json({ success: true, message: "Login successful", token });
+    await respond(200, { success: true, message: "Login successful" });
   } catch (err) {
     req.log.error({ err }, "Admin login failed");
-    res.status(500).json({ error: "Login failed" });
+    await respond(500, { error: "Login failed" });
   }
 });
 
@@ -247,8 +269,6 @@ router.get("/admin/listings", requireAdmin, async (req, res) => {
 
     const { status, page = 1, limit = 20 } = parsed.data;
     const offset = (page - 1) * limit;
-
-    let query = db.select().from(listingsTable);
 
     let rows: (typeof listingsTable.$inferSelect)[];
     if (status) {
@@ -483,7 +503,7 @@ router.post("/admin/import-csv", requireAdmin, async (req, res) => {
 
     for (let i = 1; i < lines.length; i++) {
       const row = parseCSVLine(lines[i]);
-      if (row.every((c) => !c)) continue; // blank row
+      if (row.every((c) => !c)) continue;
 
       const name = col(row, "name");
       if (!name) {
@@ -493,7 +513,6 @@ router.post("/admin/import-csv", requireAdmin, async (req, res) => {
       }
 
       const rawCityCounty = col(row, "city/county");
-      // If it contains a comma, split into city and county; otherwise use as both
       let city = rawCityCounty;
       let county = normalizeCounty(rawCityCounty);
       if (rawCityCounty.includes(",")) {
