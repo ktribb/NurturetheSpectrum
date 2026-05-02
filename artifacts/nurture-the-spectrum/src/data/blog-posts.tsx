@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "wouter";
 
 export interface BlogPost {
   slug: string;
@@ -9,117 +10,251 @@ export interface BlogPost {
   content: React.ReactNode;
 }
 
+const AgencyCard = ({
+  num,
+  name,
+  county,
+  tags,
+  certTags,
+  children,
+  phone,
+  email,
+  website,
+  websiteLabel,
+}: {
+  num: number;
+  name: string;
+  county: string;
+  tags: string[];
+  certTags?: string[];
+  children: React.ReactNode;
+  phone?: string;
+  email?: string;
+  website: string;
+  websiteLabel?: string;
+}) => (
+  <div className="bg-muted/40 border border-border rounded-xl p-6 my-6">
+    <h2 className="text-lg font-bold text-primary mt-0 mb-1">
+      {num}. {name}
+    </h2>
+    <p className="text-sm text-muted-foreground mb-3">📍 {county}</p>
+    <div className="flex flex-wrap gap-1.5 mb-4">
+      {tags.map((t) => (
+        <span key={t} className="inline-block bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full">
+          {t}
+        </span>
+      ))}
+      {certTags?.map((t) => (
+        <span key={t} className="inline-block bg-accent/15 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">
+          {t}
+        </span>
+      ))}
+    </div>
+    <div className="text-sm text-foreground/80 space-y-2">{children}</div>
+    <p className="text-sm mt-3 text-muted-foreground">
+      {phone && <><strong>Phone:</strong> {phone}&nbsp;&nbsp;</>}
+      {email && <><strong>Email:</strong>{" "}<a href={`mailto:${email}`} className="text-primary hover:underline">{email}</a>&nbsp;&nbsp;</>}
+      <strong>Website:</strong>{" "}
+      <a href={website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+        {websiteLabel ?? website.replace(/^https?:\/\//, "")}
+      </a>
+    </p>
+  </div>
+);
+
 const Post1Content = () => (
   <div className="prose prose-lg prose-slate max-w-none">
-    <p className="lead text-xl text-muted-foreground leading-relaxed">
-      Finding a nanny who truly understands autism isn't like any other childcare search. It requires someone with specialized training, genuine empathy, and a calm, consistent approach. If you're a Philadelphia-area family looking for that person — or for an agency that can match you with them — this guide is for you.
+    {/* Intro box */}
+    <div className="bg-primary/8 border-l-4 border-primary rounded-r-lg px-5 py-4 mb-8 not-prose">
+      <p className="text-foreground/80 leading-relaxed text-base">
+        Finding the right childcare for a child with autism or special needs takes more than a standard nanny search. You need caregivers with the right training, the right temperament, and experience working with kids who have unique sensory, behavioral, and communication needs. This guide cuts straight to the agencies serving the Philadelphia metro area that specialize in exactly that.
+      </p>
+    </div>
+
+    <p>
+      We've researched and compiled the top autism and special needs nanny agencies across <strong>Philadelphia, Delaware County, Bucks County, and Chester County</strong>. Each agency below has been selected for its specialization in autism and neurodivergent childcare, certified or trained staff, and track record serving Philadelphia-area families.
     </p>
 
-    <h2>Why Specialized Care Matters</h2>
-    <p>
-      Children on the autism spectrum often thrive with caregivers who understand sensory sensitivities, can follow ABA-informed routines, and know how to communicate without overwhelming a child who may be non-verbal or have limited expressive language. A general nanny — even a wonderful, caring one — may not have the tools to handle meltdowns, transitions, or the specific behavioral supports your child needs.
-    </p>
-    <p>
-      That's why many Philadelphia families turn to specialized agencies or independently credentialed caregivers who have training in applied behavior analysis (ABA), developmental disabilities, or special education.
-    </p>
+    {/* Pro tip */}
+    <div className="bg-accent/10 border-l-4 border-accent rounded-r-lg px-5 py-4 my-6 not-prose">
+      <p className="text-sm text-foreground/80"><strong className="text-amber-700">Pro tip:</strong> When contacting any agency, ask specifically about ABA training, BCBA supervision, and experience with your child's specific diagnosis. The more specific you are, the better match you'll get.</p>
+    </div>
 
-    <h2>What to Look for in an Autism-Friendly Nanny Agency</h2>
-    <p>Before you contact any agency, clarify these key questions:</p>
+    {/* Agency cards — rendered outside prose so we control styling */}
+    <div className="not-prose">
+      <AgencyCard
+        num={1}
+        name="The Nanny Share Network"
+        county="Philadelphia, Montgomery, Delaware & Bucks Counties"
+        tags={["Autism", "Cerebral Palsy", "Down Syndrome", "All Special Needs"]}
+        phone="(215) 277-1300"
+        website="https://thenannysharenetwork.com"
+      >
+        <p>One of the most comprehensive special needs nanny matching agencies in the Philadelphia metro area. The Nanny Share Network specializes specifically in pairing families who have children with disabilities with experienced, screened caregivers. They also serve New Jersey, Delaware, and New York.</p>
+      </AgencyCard>
+
+      <AgencyCard
+        num={2}
+        name="Balanced Babysitting"
+        county="West Chester, PA (Chester County)"
+        tags={["Autism", "ADHD", "Neurodivergent"]}
+        certTags={["BCBA-Led", "ABA-Trained Staff"]}
+        phone="(484) 401-9738"
+        email="Info@balancedbabysitting.com"
+        website="https://balancedbabysitting.com"
+      >
+        <p>A standout agency for families who want clinical-level expertise in their childcare. Balanced Babysitting is led by a Board Certified Behavior Analyst (BCBA) and places caregivers who are trained in ABA principles. They serve Chester, Delaware, Montgomery, Bucks, Berks, and Philadelphia Counties — making them one of the widest-reach specialty agencies in the area.</p>
+      </AgencyCard>
+
+      <AgencyCard
+        num={3}
+        name="Autism Babysitters"
+        county="Serves Philadelphia Metro Area (National Platform)"
+        tags={["Autism Spectrum Disorder"]}
+        certTags={["ABA-Trained"]}
+        phone="(888) 448-0430"
+        website="https://autismbabysitters.com"
+      >
+        <p>A platform built exclusively for autism families. Every caregiver on Autism Babysitters is trained in ABA principles and evidence-based techniques for working with children on the spectrum. For Philadelphia families who want a caregiver with dedicated autism-specific training, this is one of the most targeted options available.</p>
+      </AgencyCard>
+
+      <AgencyCard
+        num={4}
+        name="Jovie of Philadelphia"
+        county="Philadelphia City & Wayne, PA (Main Line)"
+        tags={["Special Needs", "Autism", "Respite Care"]}
+        certTags={["Trained & Screened Nannies"]}
+        website="https://jovie.com/services/special-needs/"
+        websiteLabel="jovie.com/services/special-needs"
+      >
+        <p>Jovie is a nationwide agency with a dedicated special needs and respite care division. Their Philadelphia presence covers both the city and the Main Line (Wayne, PA), making them a solid option for families in the western suburbs. All caregivers go through background checks and specialized training.</p>
+      </AgencyCard>
+
+      <AgencyCard
+        num={5}
+        name="Choose the Right Nanny (CTR Nanny)"
+        county="Serves Philadelphia Metro (Nationwide Agency)"
+        tags={["Autism", "ADHD", "Down Syndrome", "Cerebral Palsy", "G-Tube", "Hearing Impaired"]}
+        website="https://ctrnanny.com"
+        websiteLabel="ctrnanny.com/services/specialty-childcare/special-needs"
+      >
+        <p>CTR Nanny has one of the most detailed specialty childcare divisions we've seen. Their special needs placement team handles a wide range of diagnoses — including medically complex children requiring G-tube care — and typically places caregivers within 2 to 8 weeks. A strong choice for families with complex or multiple diagnoses.</p>
+      </AgencyCard>
+
+      <AgencyCard
+        num={6}
+        name="Helping Hands Family"
+        county="Drexel Hill (Delaware County) & West Chester/Paoli (Chester County)"
+        tags={["Autism", "ABA Therapy", "Early Intervention"]}
+        certTags={["BHCOE-Accredited", "BCBA Staff"]}
+        phone="(484) 965-9966"
+        website="https://hhfamily.com"
+      >
+        <p>Helping Hands Family is BHCOE-accredited — a nationally recognized quality standard for ABA providers — and has physical locations in both Delaware and Chester Counties. They offer in-home and clinic-based ABA, and their staff includes BCBAs and RBTs who can deliver caregiver-adjacent services in your home.</p>
+      </AgencyCard>
+
+      <AgencyCard
+        num={7}
+        name="Beyond Autism Services"
+        county="West Chester, Media & Havertown, PA (Chester & Delaware Counties)"
+        tags={["Autism", "ABA Therapy", "Speech Therapy", "Occupational Therapy"]}
+        certTags={["BCBA-Supervised", "BHCOE-Accredited"]}
+        phone="(610) 572-5520"
+        email="Admin@beyondautismservices.com"
+        website="https://beyondautismservices.com"
+      >
+        <p>Beyond Autism Services offers a collaborative ABA + speech + occupational therapy model, making them ideal for families who need more than just behavioral support. With three suburban Philadelphia locations, they're highly accessible for Delaware and Chester County families. Their BCBAs and RBTs may also be available for in-home caregiver sessions.</p>
+      </AgencyCard>
+
+      <AgencyCard
+        num={8}
+        name="Aspire Child & Family Services"
+        county="Huntingdon Valley, PA (Montgomery & Bucks Counties)"
+        tags={["Autism", "ABA Therapy", "Behavioral Health"]}
+        certTags={["BCBA Staff"]}
+        phone="(267) 388-0670"
+        email="info@AspireCFS.com"
+        website="https://aspirecfs.com"
+      >
+        <p>Aspire CFS delivers in-home, school, and community-based ABA for children in Montgomery and Bucks Counties. They also offer diagnostic testing and counseling alongside childcare support, making them a good all-in-one option for families navigating the early stages of diagnosis and treatment.</p>
+      </AgencyCard>
+
+      <AgencyCard
+        num={9}
+        name="Acclaim Autism"
+        county="West Chester & Philadelphia, PA"
+        tags={["Autism", "ABA Therapy"]}
+        certTags={["BCBA-Supervised"]}
+        phone="(888) 805-8206"
+        email="info@acclaimautism.com"
+        website="https://acclaimautism.com"
+      >
+        <p>Acclaim Autism offers in-home and clinic-based ABA across Chester County, Delaware County, and the Main Line. Their community and school-based ABA model is a good fit for families who want caregiver support that extends beyond the home environment. They have a Philadelphia location as well.</p>
+      </AgencyCard>
+
+      <AgencyCard
+        num={10}
+        name="A-Team Home Care"
+        county="Feasterville, PA (Philadelphia City & Bucks County)"
+        tags={["Autism", "Pediatric Special Needs", "In-Home Support"]}
+        certTags={["ABA-Informed Care"]}
+        phone="(215) 490-9994"
+        website="https://ateampa.com"
+      >
+        <p>A-Team Home Care focuses specifically on autism home care in the Philadelphia area, offering personalized care plans that combine behavioral and developmental support with skilled nursing when needed. They accept Medicaid and offer free in-home consultations — a big plus for families navigating insurance and waiver programs.</p>
+      </AgencyCard>
+    </div>
+
+    {/* CTA box */}
+    <div className="not-prose bg-primary rounded-xl px-8 py-10 my-10 text-center">
+      <h2 className="text-xl font-bold text-white mb-3">Browse the Full Philadelphia Autism Childcare Directory</h2>
+      <p className="text-primary-foreground/80 mb-5 text-sm leading-relaxed">
+        NurturetheSpectrum.com lists 35+ vetted agencies and providers across Philadelphia, Delaware, Bucks, and Chester Counties — with filters by county, specialization, and certification.
+      </p>
+      <Link href="/directory" className="inline-block bg-accent text-white font-bold px-7 py-3 rounded-lg hover:bg-accent/90 transition-colors text-sm">
+        Browse All Agencies →
+      </Link>
+    </div>
+
+    <h2>What to Ask Before Hiring an Autism Nanny Agency</h2>
+    <p>Once you've found a few agencies that look like a good fit, here are the questions that matter most:</p>
     <ul>
-      <li><strong>Screening process:</strong> Do they verify certifications like RBT (Registered Behavior Technician), CPR/First Aid, or special education credentials?</li>
-      <li><strong>Matching depth:</strong> Do they ask detailed questions about your child's diagnosis, sensory profile, communication style, and daily routine — or do they treat it like a standard childcare placement?</li>
-      <li><strong>Trial period:</strong> Do they offer a structured trial or transition period so your child can acclimate gradually?</li>
-      <li><strong>Backup care:</strong> What happens if your primary caregiver is sick? Consistency is critical for many kids on the spectrum, so understanding the backup plan matters.</li>
-      <li><strong>Ongoing support:</strong> Does the agency stay involved after placement, or does the relationship end at signing?</li>
+      <li><strong>Do your caregivers have ABA training?</strong> ABA (Applied Behavior Analysis) is the most evidence-based approach for autism. BCBA supervision is a strong indicator of quality.</li>
+      <li><strong>Have your caregivers worked with a child who has my child's specific diagnosis?</strong> Autism presents very differently across individuals — experience with the spectrum in general is not the same as experience with your child's specific profile.</li>
+      <li><strong>What is your caregiver screening process?</strong> Background checks, references, and in-person interviews should all be standard.</li>
+      <li><strong>Do you offer a trial period or guarantee?</strong> Reputable agencies will give you a window to make sure the match is right before locking into a long-term arrangement.</li>
+      <li><strong>Do you accept Medicaid or waiver programs?</strong> If your child has a Medicaid waiver (like the PA Consolidated Waiver), some agencies can bill directly — reducing your out-of-pocket cost significantly.</li>
     </ul>
 
-    <h2>Types of Caregivers Available in the Philadelphia Area</h2>
-    <p>
-      The Philadelphia metro — spanning the city itself, Delaware County, Bucks County, and Chester County — has a growing network of providers. Here's a breakdown of the types you'll commonly encounter:
-    </p>
+    <h2>Frequently Asked Questions</h2>
 
-    <h3>Full-Service Placement Agencies</h3>
-    <p>
-      These agencies handle background checks, credential verification, and matching. They typically charge a placement fee (often 10–20% of the caregiver's annual salary) but take on much of the vetting work. Look for agencies that explicitly serve children with special needs rather than treating autism care as a side offering.
-    </p>
+    <p className="font-bold text-primary not-prose mt-5 mb-1">How much does an autism nanny cost in Philadelphia?</p>
+    <p>Rates vary widely depending on the caregiver's certifications and the agency. In the Philadelphia metro area, expect to pay $25–$45/hour for an experienced special needs nanny or ABA-trained caregiver. Agency placement fees are typically separate and range from a few hundred to several thousand dollars depending on the placement type.</p>
 
-    <h3>Independent RBTs and Behavior Technicians</h3>
-    <p>
-      Registered Behavior Technicians hold a nationally recognized credential from the Behavior Analyst Certification Board (BACB) and are trained in ABA therapy. Many work part-time as nannies or after-school caregivers. You can find them through therapist networks, Facebook groups, or directories like NurturetheSpectrum.com.
-    </p>
+    <p className="font-bold text-primary not-prose mt-5 mb-1">What certifications should I look for in an autism nanny?</p>
+    <p>The most valuable credentials are BCBA (Board Certified Behavior Analyst), RBT (Registered Behavior Technician), and ABA certification. CPR certification and special education backgrounds are also strong indicators. For medically complex children, look for HHA (Home Health Aide) certification as well.</p>
 
-    <h3>Special Education Paraprofessionals</h3>
-    <p>
-      Former or current "paras" who work in school settings often bring extraordinary patience and hands-on experience. They understand IEPs, can generalize skills from school to home settings, and are familiar with a wide range of presentations across the spectrum.
-    </p>
+    <p className="font-bold text-primary not-prose mt-5 mb-1">Does Pennsylvania Medicaid cover autism childcare?</p>
+    <p>Pennsylvania's ODP (Office of Developmental Programs) Medicaid waivers — including the Consolidated Waiver and Community Living Waiver — can fund in-home supports for eligible individuals with autism and intellectual disabilities. Several agencies on this list are ODP-certified providers. Contact your county's ODP Supports Coordinator to determine eligibility.</p>
 
-    <h3>Therapeutic Nanny / DSP Hybrid</h3>
-    <p>
-      A newer category, the therapeutic nanny combines personal care with structured developmental support. These caregivers often hold degrees in psychology, social work, or special education and can work alongside your child's clinical team to reinforce goals at home.
-    </p>
+    <p className="font-bold text-primary not-prose mt-5 mb-1">Which counties does this directory cover?</p>
+    <p>NurturetheSpectrum.com currently covers Philadelphia County, Delaware County, Bucks County, and Chester County. Many agencies listed also serve Montgomery County and surrounding areas.</p>
 
-    <h2>Questions to Ask Every Candidate</h2>
-    <p>Whether you're going through an agency or hiring independently, these questions help you assess fit quickly:</p>
-    <ol>
-      <li>"Tell me about a time a child you worked with had a significant meltdown. What did you do?"</li>
-      <li>"Have you worked with non-verbal children or children who use AAC devices? Which systems are you familiar with?"</li>
-      <li>"How do you handle transitions between activities, and do you use visual schedules or social stories?"</li>
-      <li>"Are you comfortable with sensory-related needs, such as specific food textures, clothing sensitivities, or noise sensitivity?"</li>
-      <li>"How do you communicate with parents at the end of each day, and what does that report include?"</li>
-    </ol>
-
-    <h2>Red Flags to Watch Out For</h2>
-    <p>
-      Not every agency that claims to specialize in autism is equally equipped. Be cautious if:
-    </p>
-    <ul>
-      <li>The intake form doesn't ask detailed questions about your child's specific diagnosis or needs</li>
-      <li>The agency can't explain how they verify ABA or special education credentials</li>
-      <li>They promise a "perfect match" very quickly without a thorough assessment</li>
-      <li>There's no structured introduction period or home visit before placement</li>
-      <li>Reviews or references are vague or hard to obtain</li>
-    </ul>
-
-    <h2>Cost Expectations in the Philadelphia Area</h2>
-    <p>
-      Specialized autism caregivers typically command a premium over general childcare rates — and for good reason. In the Philadelphia metro, expect:
-    </p>
-    <ul>
-      <li><strong>General nannies without autism experience:</strong> $18–$24/hour</li>
-      <li><strong>Nannies with autism-specific experience:</strong> $22–$32/hour</li>
-      <li><strong>Credentialed RBTs working as nannies:</strong> $28–$45/hour</li>
-      <li><strong>Agency placement fees:</strong> $1,500–$4,000 one-time</li>
-    </ul>
-    <p>
-      Some families use HCBS (Home and Community Based Services) Medicaid waivers to offset costs. Pennsylvania's Consolidated and Person/Family Directed Support (P/FDS) waivers can cover in-home support services — worth exploring with your support coordinator.
-    </p>
-
-    <h2>Finding Caregivers Through NurturetheSpectrum.com</h2>
-    <p>
-      Our directory is built specifically for Philadelphia-area families. Every listing includes specializations, certifications, years of experience, and hourly rate ranges — so you can filter by what matters most to your family before making a single phone call.
-    </p>
-    <p>
-      You can search by county (Philadelphia, Delaware, Bucks, Chester), by caregiver type (agency, individual, platform), and by specialization (ABA therapy, behavioral support, sensory processing, and more).
-    </p>
-
-    <h2>Final Thoughts</h2>
-    <p>
-      The search for the right caregiver is rarely quick, and it can feel exhausting when you're already carrying so much. Give yourself permission to be thorough, to ask hard questions, and to trust your instincts about fit. The right person is out there — and the Philadelphia area has more qualified, compassionate caregivers than many families realize.
-    </p>
-    <p>
-      If you know of a caregiver or agency that belongs in our directory, please encourage them to <a href="/submit" className="text-primary hover:underline font-medium">submit a listing</a>. The more complete our directory is, the easier this search becomes for every family who comes after you.
-    </p>
+    <div className="not-prose border-t border-border mt-12 pt-6 text-xs text-muted-foreground">
+      <p>NurturetheSpectrum.com is an independent directory. We do not receive compensation for agency listings unless noted as Featured or Verified. Always conduct your own due diligence before hiring a caregiver or agency. Information is updated periodically — contact agencies directly to confirm current availability and rates.</p>
+      <p className="mt-2">© 2026 NurturetheSpectrum.com | Philadelphia, PA</p>
+    </div>
   </div>
 );
 
 export const blogPosts: BlogPost[] = [
   {
     slug: "best-autism-nanny-agencies-philadelphia",
-    title: "How to Find the Best Autism-Friendly Nanny Agencies in Philadelphia",
-    date: "May 2, 2026",
-    readTime: "8 min read",
+    title: "The Best Autism & Special Needs Nanny Agencies in Philadelphia (2026)",
+    date: "May 2026",
+    readTime: "7 min read",
     excerpt:
-      "A practical guide for Philadelphia-area families searching for specialized caregivers who understand autism — what to look for, what to ask, and what to expect.",
+      "Looking for an autism or special needs nanny agency in Philadelphia? Here are the top agencies serving Philadelphia, Delaware, Bucks, and Chester Counties — with specializations, certifications, and contact info.",
     content: <Post1Content />,
   },
 ];
