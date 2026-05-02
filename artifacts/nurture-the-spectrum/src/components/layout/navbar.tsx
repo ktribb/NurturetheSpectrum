@@ -16,6 +16,9 @@ export function Navbar() {
           <Link href="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             About
           </Link>
+          <Link href="/blog" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Blog
+          </Link>
           <Link href="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Contact
           </Link>

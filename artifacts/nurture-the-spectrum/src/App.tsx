@@ -13,6 +13,8 @@ import ListingDetail from "@/pages/listing";
 import SubmitListing from "@/pages/submit";
 import About from "@/pages/about";
 import Contact from "@/pages/contact";
+import Blog from "@/pages/blog/index";
+import BlogPost from "@/pages/blog/post";
 import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/dashboard";
 
@@ -50,6 +52,12 @@ function Router() {
       </Route>
       <Route path="/about">
         <WithPublicLayout><About /></WithPublicLayout>
+      </Route>
+      <Route path="/blog/:slug">
+        <WithPublicLayout><BlogPost /></WithPublicLayout>
+      </Route>
+      <Route path="/blog">
+        <WithPublicLayout><Blog /></WithPublicLayout>
       </Route>
       <Route path="/contact">
         <WithPublicLayout><Contact /></WithPublicLayout>
