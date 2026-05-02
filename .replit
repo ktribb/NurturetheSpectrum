@@ -38,7 +38,7 @@ CONTACT_EMAIL = "admin@nurturethespectrum.com"
 STRIPE_SECRET_KEY = "sk_test_placeholder"
 STRIPE_PUBLISHABLE_KEY = "pk_test_placeholder"
 NEXT_PUBLIC_SITE_URL = "https://nurturethespectrum.com"
-ADMIN_PASSWORD = "NurtureAdmin2024!"
+ADMIN_PASSWORD = "Starfish0)"
 
 [nix]
 channel = "stable-25_05"
