@@ -5,6 +5,7 @@ import pinoHttp from "pino-http";
 import rateLimit from "express-rate-limit";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { allowedOrigins, requireSameOrigin } from "./middlewares/origin";
 
 const app: Express = express();
 
@@ -30,23 +31,6 @@ app.use(
   }),
 );
 
-const allowedOrigins = new Set<string>([
-  // Explicit override takes precedence (comma-separated full origins, e.g. "https://example.com")
-  ...(process.env.CORS_ALLOWED_ORIGINS ?? "")
-    .split(",")
-    .map((o) => o.trim())
-    .filter(Boolean),
-  // Replit-managed production domains
-  ...(process.env.REPLIT_DOMAINS ?? "")
-    .split(",")
-    .map((d) => d.trim())
-    .filter(Boolean)
-    .map((d) => `https://${d}`),
-  // Local development
-  "http://localhost:5173",
-  "http://localhost:3000",
-]);
-
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -54,7 +38,11 @@ app.use(
       if (!origin || allowedOrigins.has(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        // For unrecognized origins, do not echo Access-Control-Allow-Origin
+        // (so browsers block the response) but let the request continue so
+        // route-level guards like `requireSameOrigin` can return a clean 403
+        // instead of Express's default 500 for a thrown CORS error.
+        callback(null, false);
       }
     },
     credentials: true,
@@ -80,8 +68,8 @@ const listingSubmitRateLimit = rateLimit({
   message: { error: "Too many requests, please try again later." },
 });
 
-app.use("/api/contact", contactRateLimit);
-app.use("/api/listings/submit", listingSubmitRateLimit);
+app.use("/api/contact", contactRateLimit, requireSameOrigin);
+app.use("/api/listings/submit", listingSubmitRateLimit, requireSameOrigin);
 
 app.use("/api", router);
 
