@@ -546,9 +546,7 @@ router.post("/admin/import-csv", requireAdmin, async (req, res) => {
       const email = rawEmail || `contact@${name.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
 
       const notes = col(row, "notes");
-      const contactStatus = col(row, "contact status");
-      const descriptionParts = [notes, contactStatus ? `Contact Status: ${contactStatus}` : ""].filter(Boolean);
-      const description = descriptionParts.join(" | ") || `${name} is a caregiver serving the Philadelphia metro area.`;
+      const description = notes || `${name} is a caregiver serving the Philadelphia metro area.`;
 
       const yearsRaw = col(row, "years experience");
       const yearsExperience = yearsRaw ? parseInt(yearsRaw, 10) || null : null;

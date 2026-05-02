@@ -161,7 +161,7 @@ export default function CsvImportDialog({ open, onOpenChange, onSuccess }: CsvIm
           <DialogTitle>Import Listings from CSV</DialogTitle>
           <DialogDescription>
             Upload a CSV file with columns: Name, Type, City/County, Specialization, Certifications,
-            Website, Email, Phone, Hourly Rate, Years Experience, Notes, Contact Status.
+            Website, Email, Phone, Hourly Rate, Years Experience, Notes.
             All rows will be imported with status set to <strong>Published</strong>.
           </DialogDescription>
         </DialogHeader>
