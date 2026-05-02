@@ -1,0 +1,134 @@
+Build me a full-stack directory website called NurturetheSpectrum.com — a niche directory connecting families of children with autism and special needs to qualified nannies, caregivers, and agencies in the Philadelphia metro area.
+
+=== TECH STACK ===
+- Frontend: Next.js with Tailwind CSS
+- Backend: Next.js API routes
+- Database: PostgreSQL (use Replit's built-in DB or Prisma with SQLite for dev)
+- Authentication: Simple admin password login (no user accounts needed yet)
+- Payments: Stripe (set up the structure but leave API keys as environment variable placeholders)
+
+=== COLOR SCHEME & DESIGN ===
+- Primary color: Deep teal (#1a6b72)
+- Accent color: Warm gold (#e8a838)
+- Background: Off-white (#fafafa)
+- Font: Inter or system sans-serif
+- Tone: Warm, trustworthy, professional — this serves families in vulnerable situations
+- Mobile-first, clean, easy to scan — no cluttered layouts
+- WCAG 2.1 AA accessibility compliant
+
+=== PAGES TO BUILD ===
+
+1. HOMEPAGE (/)
+   - Hero section with headline: "Find Trusted Autism & Special Needs Childcare in Philadelphia"
+   - Subtitle: "Connecting families with certified nannies, caregivers, and agencies across the Philadelphia metro area"
+   - Search bar with County dropdown and Type dropdown
+   - "Browse Directory" CTA button
+   - Section showing 3 featured listing cards (pulled from DB, flagged as featured)
+   - "How It Works" section with 3 steps: Search → Review → Connect
+   - Footer with links to About, Contact, Submit a Listing
+
+2. DIRECTORY / SEARCH PAGE (/directory)
+   - Filter sidebar or top filter bar with:
+     * County (Philadelphia, Delaware County, Bucks County, Chester County)
+     * Provider Type (Agency, Individual Caregiver, Platform/Network)
+     * Specialization (multi-select: ABA Therapy, ADHD, Down Syndrome, General Special Needs, Behavioral Support, Early Intervention)
+     * Certification (multi-select: BCBA, ABA Certified, CPR Certified, Special Education, RBT)
+   - Results displayed as cards showing: Name, Type badge, City/County, top 2 certifications, short description snippet, "View Profile" button
+   - Featured listings appear first with a gold "Featured" badge
+   - Verified listings show a teal "Verified" badge
+   - Pagination (12 results per page)
+
+3. INDIVIDUAL LISTING PAGE (/directory/[slug])
+   - Full profile page with:
+     * Logo/photo (or placeholder avatar)
+     * Name + Type badge
+     * Featured / Verified badge if applicable
+     * City, County, Service Area
+     * Specializations (as tags)
+     * Certifications (as tags)
+     * Years of Experience
+     * Hourly Rate
+     * Description / Bio
+     * Website link (opens in new tab)
+     * Phone number
+     * "Send Inquiry" button (opens mailto with their email, do not display email publicly)
+   - SEO: unique page title and meta description auto-generated from listing fields
+   - JSON-LD structured data (LocalBusiness schema)
+
+4. SUBMIT A LISTING (/submit)
+   - Public form for agencies/caregivers to apply
+   - Fields: Name, Type (dropdown), City, County (dropdown), Specializations (checkboxes), Certifications (checkboxes), Website, Email, Phone, Hourly Rate, Years Experience, Description, Logo upload
+   - On submit: saves to DB with status = "Pending Review", sends email notification to admin
+   - Thank you confirmation message after submission
+
+5. ABOUT PAGE (/about)
+   - Placeholder text about the mission of NurturetheSpectrum.com
+   - Leave clearly marked placeholder text: [OWNER TO FILL IN PERSONAL STORY HERE]
+
+6. CONTACT PAGE (/contact)
+   - Simple contact form: Name, Email, Message
+   - Form submits to admin email (use environment variable CONTACT_EMAIL)
+
+7. ADMIN PANEL (/admin) — password protected
+   - Login page with a single admin password (stored as environment variable ADMIN_PASSWORD)
+   - Dashboard showing: total listings, pending submissions count, listings by tier
+   - Listings table with ability to:
+     * View all listings (Published, Pending, Inactive)
+     * Approve pending submissions (change status to Published)
+     * Edit any listing field
+     * Change listing tier (Free, Featured, Verified)
+     * Delete/deactivate a listing
+   - Add New Listing form (same fields as public submit form)
+   - Export all listings as CSV
+
+=== DATABASE SCHEMA ===
+Table: listings
+- id (auto-increment primary key)
+- name (text, required)
+- slug (text, unique — auto-generated from name)
+- type (enum: Agency, Individual, Platform)
+- city (text)
+- county (enum: Philadelphia, Delaware County, Bucks County, Chester County)
+- specializations (text array or JSON)
+- certifications (text array or JSON)
+- website (text)
+- email (text)
+- phone (text)
+- hourly_rate (text)
+- years_experience (integer, nullable)
+- description (text)
+- logo_url (text, nullable)
+- tier (enum: Free, Featured, Verified) default Free
+- status (enum: Published, Pending, Inactive) default Pending
+- created_at (timestamp)
+- updated_at (timestamp)
+
+=== MONETIZATION STRUCTURE ===
+- Free tier: basic listing, no photo, bottom of results
+- Featured tier: full profile with photo, gold badge, priority in results ($75-150/month — Stripe integration placeholder)
+- Verified tier: everything in Featured + teal Verified badge, top of results ($150-250/month — Stripe integration placeholder)
+- Add Stripe Checkout session setup for Featured and Verified upgrades (leave STRIPE_SECRET_KEY as env var placeholder)
+
+=== ENVIRONMENT VARIABLES NEEDED ===
+- DATABASE_URL
+- ADMIN_PASSWORD
+- CONTACT_EMAIL
+- STRIPE_SECRET_KEY (placeholder for now)
+- STRIPE_PUBLISHABLE_KEY (placeholder for now)
+- NEXT_PUBLIC_SITE_URL (set to https://nurturethespectrum.com)
+
+=== SEED DATA ===
+Pre-populate the database with 5 sample listings across different counties and tiers so the site looks populated when first launched. Include 2 Featured listings and 1 Verified listing in the seed data.
+
+=== SEO ===
+- Each listing page: unique <title> tag formatted as "{Name} | Autism & Special Needs Childcare | {County}"
+- Meta description auto-generated from first 155 characters of description
+- Homepage title: "Autism & Special Needs Nanny Directory | Philadelphia | NurturetheSpectrum.com"
+- robots.txt and sitemap.xml auto-generated
+- All images have alt text
+
+=== IMPORTANT NOTES ===
+- Do NOT display caregiver email addresses publicly — use a "Send Inquiry" mailto button instead
+- Admin panel must be completely hidden from public (no link in nav)
+- The site must work on mobile — test all pages at 375px width
+- Keep the codebase clean and well-commented so it is easy to hand off or modify later
