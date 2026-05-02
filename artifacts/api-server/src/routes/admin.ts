@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db, listingsTable } from "@workspace/db";
-import { eq, and, desc, sql, count } from "drizzle-orm";
+import { eq, and, desc, sql, count, inArray } from "drizzle-orm";
 import {
   AdminLoginBody,
   AdminGetListingsQueryParams,
@@ -554,6 +554,30 @@ router.post("/admin/import-csv", requireAdmin, async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to import CSV");
     res.status(500).json({ error: "Failed to import CSV" });
+  }
+});
+
+// Bulk delete listings
+router.delete("/admin/listings", requireAdmin, async (req, res) => {
+  try {
+    const { ids } = req.body as { ids?: unknown };
+    if (!Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ error: "ids must be a non-empty array of listing IDs" });
+      return;
+    }
+    const numericIds = ids.map(Number).filter((n) => Number.isFinite(n) && n > 0);
+    if (numericIds.length === 0) {
+      res.status(400).json({ error: "No valid listing IDs provided" });
+      return;
+    }
+    const deleted = await db
+      .delete(listingsTable)
+      .where(inArray(listingsTable.id, numericIds))
+      .returning({ id: listingsTable.id });
+    res.json({ success: true, deleted: deleted.length, message: `Deleted ${deleted.length} listing${deleted.length !== 1 ? "s" : ""}` });
+  } catch (err) {
+    req.log.error({ err }, "Failed to bulk delete listings");
+    res.status(500).json({ error: "Failed to delete listings" });
   }
 });
 
