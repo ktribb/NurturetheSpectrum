@@ -30,9 +30,33 @@ app.use(
   }),
 );
 
+const allowedOrigins = new Set<string>([
+  // Explicit override takes precedence (comma-separated full origins, e.g. "https://example.com")
+  ...(process.env.CORS_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean),
+  // Replit-managed production domains
+  ...(process.env.REPLIT_DOMAINS ?? "")
+    .split(",")
+    .map((d) => d.trim())
+    .filter(Boolean)
+    .map((d) => `https://${d}`),
+  // Local development
+  "http://localhost:5173",
+  "http://localhost:3000",
+]);
+
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (same-origin, server-to-server)
+      if (!origin || allowedOrigins.has(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
