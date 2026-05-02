@@ -5,6 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Globe, Phone, Clock, Mail, ShieldCheck, Star, ChevronLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+function safeWebUrl(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ListingDetail() {
   const [, params] = useRoute("/directory/:slug");
   const [location, setLocation] = useLocation();
@@ -47,6 +56,7 @@ export default function ListingDetail() {
 
   const isFeatured = listing.tier === "Featured";
   const isVerified = listing.tier === "Verified" || isFeatured;
+  const safeWebsite = listing.website ? safeWebUrl(listing.website) : null;
 
   return (
     <div className="bg-background pb-20">
@@ -111,9 +121,9 @@ export default function ListingDetail() {
               >
                 <Mail className="w-4 h-4 mr-2" /> Send Inquiry
               </Button>
-              {listing.website && (
+              {safeWebsite && (
                 <Button variant="outline" className="w-full md:w-auto bg-white" asChild>
-                  <a href={listing.website} target="_blank" rel="noopener noreferrer">
+                  <a href={safeWebsite} target="_blank" rel="noopener noreferrer">
                     <Globe className="w-4 h-4 mr-2" /> Visit Website
                   </a>
                 </Button>
@@ -185,12 +195,12 @@ export default function ListingDetail() {
                   </div>
                 )}
                 
-                {listing.website && (
-                  <a href={listing.website} target="_blank" rel="noopener noreferrer" className="flex items-center p-3 rounded-lg bg-muted/30 border border-muted hover:bg-muted/50 transition-colors">
+                {safeWebsite && (
+                  <a href={safeWebsite} target="_blank" rel="noopener noreferrer" className="flex items-center p-3 rounded-lg bg-muted/30 border border-muted hover:bg-muted/50 transition-colors">
                     <Globe className="w-5 h-5 mr-3 text-muted-foreground" />
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">Website</p>
-                      <p className="font-medium text-primary line-clamp-1">{new URL(listing.website).hostname}</p>
+                      <p className="font-medium text-primary line-clamp-1">{new URL(safeWebsite).hostname}</p>
                     </div>
                   </a>
                 )}

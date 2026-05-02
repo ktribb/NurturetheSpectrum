@@ -536,6 +536,7 @@ components:
         website:
           type: string
           format: uri
+          pattern: '^https?://'
           maxLength: 500
         email:
           type: string
@@ -558,6 +559,7 @@ components:
         logoUrl:
           type: string
           format: uri
+          pattern: '^https?://'
           maxLength: 500
       required:
         - name
