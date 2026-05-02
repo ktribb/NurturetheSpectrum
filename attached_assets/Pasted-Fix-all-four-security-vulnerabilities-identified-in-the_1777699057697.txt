@@ -1,0 +1,15 @@
+Fix all four security vulnerabilities identified in the security scan:
+
+1. CSV FORMULA INJECTION (Medium)
+In the admin CSV export route (artifacts/api-server/src/routes/admin.ts), sanitize all cell values before writing to CSV by prefixing any value starting with =, +, -, @, tab, or carriage return with a single quote ('). Apply to all exported fields: name, city, website, email, phone, hourlyRate, description, and any other string fields. Also add input validation in the listing submission route to strip or escape these characters at intake.
+
+2. ADMIN BRUTE FORCE / NO RATE LIMITING (High)
+In artifacts/api-server/src/routes/admin.ts, add brute-force protection to POST /api/admin/login: implement rate limiting of maximum 5 login attempts per IP per 15 minutes using express-rate-limit, add a consistent response delay of at least 500ms on every login attempt (success or failure) to slow automated guessing, and lock out an IP for 15 minutes after 5 failed attempts. Also move the admin token from localStorage to an httpOnly cookie so it is not accessible to JavaScript. Remove any hardcoded ADMIN_PASSWORD value from the .replit file and ensure it is only read from environment secrets.
+
+3. CONTACT FORM LOG FLOODING (Medium)
+In artifacts/api-server/src/routes/contact.ts and artifacts/api-server/src/app.ts, add rate limiting to POST /api/contact of maximum 5 requests per IP per hour using express-rate-limit. Add strict input validation to SubmitContactBody: enforce .email() format on the email field and set maximum lengths (name: 100 chars, email: 254 chars, message: 2000 chars). Set a global Express body size limit of 10kb in app.ts.
+
+4. LISTING SUBMISSION FLOODING + SLUG AMPLIFICATION (High)
+In artifacts/api-server/src/routes/listings.ts, add rate limiting to POST /api/listings/submit of maximum 3 submissions per IP per hour using express-rate-limit. Add strict validation to SubmitListingBody: enforce maximum lengths on all text fields (name: 150 chars, city: 100 chars, description: 3000 chars, email: 254 chars with .email() format, website: 500 chars with .url() format, phone: 20 chars, hourlyRate: 50 chars), restrict the type field to only accept valid enum values (Agency, Individual, Platform), and restrict county to only the four valid values. Fix the uniqueSlug() function to use a single database query with a LIKE or regex pattern to find all existing slug variants at once, then pick the next available number — eliminating the repeated per-attempt queries that cause quadratic load.
+
+After all fixes are applied, re-run the security scan to confirm all four issues are resolved.
