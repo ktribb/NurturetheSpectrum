@@ -57,6 +57,8 @@ export default function ListingDetail() {
   const isFeatured = listing.tier === "Featured";
   const isVerified = listing.tier === "Verified" || isFeatured;
   const safeWebsite = listing.website ? safeWebUrl(listing.website) : null;
+  const inquirySubject = `Inquiry regarding ${listing.name} via Nurture the Spectrum`;
+  const inquiryMailto = `mailto:hello@example.com?subject=${encodeURIComponent(inquirySubject)}`;
 
   return (
     <div className="bg-background pb-20">
@@ -117,7 +119,7 @@ export default function ListingDetail() {
               <Button 
                 size="lg" 
                 className="w-full md:w-auto shadow-sm"
-                onClick={() => window.location.href = `mailto:hello@example.com?subject=Inquiry regarding ${listing.name} via Nurture the Spectrum`}
+                onClick={() => { window.location.href = inquiryMailto; }}
               >
                 <Mail className="w-4 h-4 mr-2" /> Send Inquiry
               </Button>
@@ -180,7 +182,7 @@ export default function ListingDetail() {
               <div className="space-y-4">
                 <Button 
                   className="w-full justify-start text-left bg-primary hover:bg-primary/90" 
-                  onClick={() => window.location.href = `mailto:hello@example.com?subject=Inquiry regarding ${listing.name} via Nurture the Spectrum`}
+                  onClick={() => { window.location.href = inquiryMailto; }}
                 >
                   <Mail className="w-4 h-4 mr-3" /> Send a Message
                 </Button>
