@@ -18,6 +18,21 @@ const router = Router();
 const ADMIN_SESSION_TOKEN = "nts_admin_session";
 const activeSessions = new Set<string>();
 
+/**
+ * Sanitize a value for safe inclusion in a CSV cell.
+ * Prevents CSV formula injection by prefixing cells whose content starts with
+ * a spreadsheet formula metacharacter (=, +, -, @, tab, carriage return) with
+ * a single-quote, which causes spreadsheet applications to treat the cell as
+ * plain text rather than a formula.
+ */
+function sanitizeCsvCell(value: string | number | null | undefined): string {
+  const str = value == null ? "" : String(value);
+  if (/^[=+\-@\t\r]/.test(str)) {
+    return `'${str}`;
+  }
+  return str;
+}
+
 const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -225,26 +240,31 @@ router.get("/admin/listings/export", requireAdmin, async (req, res) => {
       "Created At",
     ];
 
+    const csvCell = (value: string | number | null | undefined) => {
+      const sanitized = sanitizeCsvCell(value);
+      return `"${sanitized.replace(/"/g, '""')}"`;
+    };
+
     const csvRows = [
       headers.join(","),
       ...rows.map((r) => [
         r.id,
-        `"${r.name.replace(/"/g, '""')}"`,
-        r.slug,
-        r.type,
-        `"${r.city}"`,
-        r.county,
-        `"${((r.specializations as string[]) || []).join("; ")}"`,
-        `"${((r.certifications as string[]) || []).join("; ")}"`,
-        r.website || "",
-        r.email,
-        r.phone || "",
-        r.hourlyRate || "",
+        csvCell(r.name),
+        csvCell(r.slug),
+        csvCell(r.type),
+        csvCell(r.city),
+        csvCell(r.county),
+        csvCell(((r.specializations as string[]) || []).join("; ")),
+        csvCell(((r.certifications as string[]) || []).join("; ")),
+        csvCell(r.website),
+        csvCell(r.email),
+        csvCell(r.phone),
+        csvCell(r.hourlyRate),
         r.yearsExperience ?? "",
-        `"${(r.description || "").replace(/"/g, '""')}"`,
-        r.logoUrl || "",
-        r.tier,
-        r.status,
+        csvCell(r.description),
+        csvCell(r.logoUrl),
+        csvCell(r.tier),
+        csvCell(r.status),
         r.createdAt.toISOString(),
       ].join(",")),
     ];
