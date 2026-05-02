@@ -54,20 +54,68 @@ export interface ListingStats {
   total: number;
 }
 
+export type SubmitListingBodyType =
+  (typeof SubmitListingBodyType)[keyof typeof SubmitListingBodyType];
+
+export const SubmitListingBodyType = {
+  Agency: "Agency",
+  Individual: "Individual",
+  Platform: "Platform",
+} as const;
+
+export type SubmitListingBodyCounty =
+  (typeof SubmitListingBodyCounty)[keyof typeof SubmitListingBodyCounty];
+
+export const SubmitListingBodyCounty = {
+  Philadelphia: "Philadelphia",
+  Delaware_County: "Delaware County",
+  Bucks_County: "Bucks County",
+  Chester_County: "Chester County",
+} as const;
+
 export interface SubmitListingBody {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
   name: string;
-  type: string;
+  type: SubmitListingBodyType;
+  /**
+   * @minLength 1
+   * @maxLength 100
+   */
   city: string;
-  county: string;
+  county: SubmitListingBodyCounty;
+  /** @maxItems 20 */
   specializations?: string[];
+  /** @maxItems 20 */
   certifications?: string[];
+  /**
+   * @maxLength 500
+   * @pattern ^https?://
+   */
   website?: string;
+  /** @maxLength 254 */
   email: string;
+  /** @maxLength 30 */
   phone?: string;
+  /** @maxLength 50 */
   hourlyRate?: string;
-  /** @nullable */
+  /**
+   * @minimum 0
+   * @maximum 100
+   * @nullable
+   */
   yearsExperience?: number | null;
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
   description: string;
+  /**
+   * @maxLength 500
+   * @pattern ^https?://
+   */
   logoUrl?: string;
 }
 
@@ -96,8 +144,17 @@ export interface AdminListingBody {
 }
 
 export interface ContactBody {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
   name: string;
+  /** @maxLength 254 */
   email: string;
+  /**
+   * @minLength 1
+   * @maxLength 5000
+   */
   message: string;
 }
 
@@ -138,7 +195,14 @@ export type GetListingsParams = {
   type?: string;
   specializations?: string;
   certifications?: string;
+  /**
+   * @minimum 1
+   */
   page?: number;
+  /**
+   * @minimum 1
+   * @maximum 50
+   */
   limit?: number;
 };
 

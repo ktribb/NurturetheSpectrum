@@ -7,7 +7,16 @@
  */
 
 export interface ContactBody {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
   name: string;
+  /** @maxLength 254 */
   email: string;
+  /**
+   * @minLength 1
+   * @maxLength 5000
+   */
   message: string;
 }

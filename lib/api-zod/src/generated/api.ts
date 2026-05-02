@@ -17,13 +17,22 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary Get published listings with filters
  */
+export const getListingsQueryPageDefault = 1;
+
+export const getListingsQueryLimitDefault = 12;
+export const getListingsQueryLimitMax = 50;
+
 export const GetListingsQueryParams = zod.object({
   county: zod.coerce.string().optional(),
   type: zod.coerce.string().optional(),
   specializations: zod.coerce.string().optional(),
   certifications: zod.coerce.string().optional(),
-  page: zod.coerce.number().optional(),
-  limit: zod.coerce.number().optional(),
+  page: zod.coerce.number().min(1).default(getListingsQueryPageDefault),
+  limit: zod.coerce
+    .number()
+    .min(1)
+    .max(getListingsQueryLimitMax)
+    .default(getListingsQueryLimitDefault),
 });
 
 export const GetListingsResponse = zod.object({
@@ -137,29 +146,90 @@ export const GetListingBySlugResponse = zod.object({
 /**
  * @summary Submit a new listing for review
  */
+export const submitListingBodyNameMax = 200;
+
+export const submitListingBodyCityMax = 100;
+
+export const submitListingBodySpecializationsItemMax = 100;
+
+export const submitListingBodySpecializationsMax = 20;
+
+export const submitListingBodyCertificationsItemMax = 100;
+
+export const submitListingBodyCertificationsMax = 20;
+
+export const submitListingBodyWebsiteMax = 500;
+
+export const submitListingBodyWebsiteRegExp = new RegExp("^https?:\/");
+export const submitListingBodyEmailMax = 254;
+
+export const submitListingBodyPhoneMax = 30;
+
+export const submitListingBodyHourlyRateMax = 50;
+
+export const submitListingBodyYearsExperienceMin = 0;
+export const submitListingBodyYearsExperienceMax = 100;
+
+export const submitListingBodyDescriptionMax = 2000;
+
+export const submitListingBodyLogoUrlMax = 500;
+
+export const submitListingBodyLogoUrlRegExp = new RegExp("^https?:\/");
+
 export const SubmitListingBody = zod.object({
-  name: zod.string().min(1).max(200),
+  name: zod.string().min(1).max(submitListingBodyNameMax),
   type: zod.enum(["Agency", "Individual", "Platform"]),
-  city: zod.string().min(1).max(100),
-  county: zod.enum(["Philadelphia", "Delaware County", "Bucks County", "Chester County"]),
-  specializations: zod.array(zod.string().max(100)).max(20).optional(),
-  certifications: zod.array(zod.string().max(100)).max(20).optional(),
-  website: zod.string().url().max(500).refine(val => /^https?:\/\//i.test(val), { message: "URL must use http or https scheme" }).optional(),
-  email: zod.string().email().max(254),
-  phone: zod.string().max(30).optional(),
-  hourlyRate: zod.string().max(50).optional(),
-  yearsExperience: zod.number().int().min(0).max(100).nullish(),
-  description: zod.string().min(1).max(2000),
-  logoUrl: zod.string().url().max(500).refine(val => /^https?:\/\//i.test(val), { message: "URL must use http or https scheme" }).optional(),
+  city: zod.string().min(1).max(submitListingBodyCityMax),
+  county: zod.enum([
+    "Philadelphia",
+    "Delaware County",
+    "Bucks County",
+    "Chester County",
+  ]),
+  specializations: zod
+    .array(zod.string().max(submitListingBodySpecializationsItemMax))
+    .max(submitListingBodySpecializationsMax)
+    .optional(),
+  certifications: zod
+    .array(zod.string().max(submitListingBodyCertificationsItemMax))
+    .max(submitListingBodyCertificationsMax)
+    .optional(),
+  website: zod
+    .string()
+    .url()
+    .max(submitListingBodyWebsiteMax)
+    .regex(submitListingBodyWebsiteRegExp)
+    .optional(),
+  email: zod.string().email().max(submitListingBodyEmailMax),
+  phone: zod.string().max(submitListingBodyPhoneMax).optional(),
+  hourlyRate: zod.string().max(submitListingBodyHourlyRateMax).optional(),
+  yearsExperience: zod
+    .number()
+    .min(submitListingBodyYearsExperienceMin)
+    .max(submitListingBodyYearsExperienceMax)
+    .nullish(),
+  description: zod.string().min(1).max(submitListingBodyDescriptionMax),
+  logoUrl: zod
+    .string()
+    .url()
+    .max(submitListingBodyLogoUrlMax)
+    .regex(submitListingBodyLogoUrlRegExp)
+    .optional(),
 });
 
 /**
  * @summary Submit a contact form message
  */
+export const submitContactBodyNameMax = 200;
+
+export const submitContactBodyEmailMax = 254;
+
+export const submitContactBodyMessageMax = 5000;
+
 export const SubmitContactBody = zod.object({
-  name: zod.string().min(1).max(200),
-  email: zod.string().email().max(254),
-  message: zod.string().min(1).max(5000),
+  name: zod.string().min(1).max(submitContactBodyNameMax),
+  email: zod.string().email().max(submitContactBodyEmailMax),
+  message: zod.string().min(1).max(submitContactBodyMessageMax),
 });
 
 export const SubmitContactResponse = zod.object({
@@ -241,13 +311,13 @@ export const AdminCreateListingBody = zod.object({
   county: zod.string().optional(),
   specializations: zod.array(zod.string()).optional(),
   certifications: zod.array(zod.string()).optional(),
-  website: zod.string().url().refine(val => /^https?:\/\//i.test(val), { message: "URL must use http or https scheme" }).optional(),
+  website: zod.string().optional(),
   email: zod.string().optional(),
   phone: zod.string().optional(),
   hourlyRate: zod.string().optional(),
   yearsExperience: zod.number().nullish(),
   description: zod.string().optional(),
-  logoUrl: zod.string().url().refine(val => /^https?:\/\//i.test(val), { message: "URL must use http or https scheme" }).optional(),
+  logoUrl: zod.string().optional(),
   tier: zod.string().optional(),
   status: zod.string().optional(),
 });
@@ -266,13 +336,13 @@ export const AdminUpdateListingBody = zod.object({
   county: zod.string().optional(),
   specializations: zod.array(zod.string()).optional(),
   certifications: zod.array(zod.string()).optional(),
-  website: zod.string().url().refine(val => /^https?:\/\//i.test(val), { message: "URL must use http or https scheme" }).optional(),
+  website: zod.string().optional(),
   email: zod.string().optional(),
   phone: zod.string().optional(),
   hourlyRate: zod.string().optional(),
   yearsExperience: zod.number().nullish(),
   description: zod.string().optional(),
-  logoUrl: zod.string().url().refine(val => /^https?:\/\//i.test(val), { message: "URL must use http or https scheme" }).optional(),
+  logoUrl: zod.string().optional(),
   tier: zod.string().optional(),
   status: zod.string().optional(),
 });

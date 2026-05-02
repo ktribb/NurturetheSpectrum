@@ -5,20 +5,51 @@
  * NurturetheSpectrum.com API
  * OpenAPI spec version: 0.1.0
  */
+import type { SubmitListingBodyCounty } from "./submitListingBodyCounty";
+import type { SubmitListingBodyType } from "./submitListingBodyType";
 
 export interface SubmitListingBody {
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
   name: string;
-  type: string;
+  type: SubmitListingBodyType;
+  /**
+   * @minLength 1
+   * @maxLength 100
+   */
   city: string;
-  county: string;
+  county: SubmitListingBodyCounty;
+  /** @maxItems 20 */
   specializations?: string[];
+  /** @maxItems 20 */
   certifications?: string[];
+  /**
+   * @maxLength 500
+   * @pattern ^https?://
+   */
   website?: string;
+  /** @maxLength 254 */
   email: string;
+  /** @maxLength 30 */
   phone?: string;
+  /** @maxLength 50 */
   hourlyRate?: string;
-  /** @nullable */
+  /**
+   * @minimum 0
+   * @maximum 100
+   * @nullable
+   */
   yearsExperience?: number | null;
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
   description: string;
+  /**
+   * @maxLength 500
+   * @pattern ^https?://
+   */
   logoUrl?: string;
 }

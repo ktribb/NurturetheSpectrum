@@ -21,5 +21,7 @@ export * from "./listing";
 export * from "./listingsResponse";
 export * from "./listingStats";
 export * from "./submitListingBody";
+export * from "./submitListingBodyCounty";
+export * from "./submitListingBodyType";
 export * from "./submitListingResponse";
 export * from "./successResponse";

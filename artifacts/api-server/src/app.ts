@@ -68,8 +68,23 @@ const listingSubmitRateLimit = rateLimit({
   message: { error: "Too many requests, please try again later." },
 });
 
+const listingReadRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests, please try again later." },
+});
+
 app.use("/api/contact", contactRateLimit, requireSameOrigin);
 app.use("/api/listings/submit", listingSubmitRateLimit, requireSameOrigin);
+app.use("/api/listings", (req, res, next) => {
+  if (req.method === "GET") {
+    listingReadRateLimit(req, res, next);
+  } else {
+    next();
+  }
+});
 
 app.use("/api", router);
 

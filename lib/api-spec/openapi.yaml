@@ -57,10 +57,15 @@ paths:
           in: query
           schema:
             type: integer
+            minimum: 1
+            default: 1
         - name: limit
           in: query
           schema:
             type: integer
+            minimum: 1
+            maximum: 50
+            default: 12
       responses:
         "200":
           description: List of published listings

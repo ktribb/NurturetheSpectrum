@@ -68,7 +68,8 @@ router.get("/listings", async (req, res) => {
       return;
     }
 
-    const { county, type, specializations, certifications, page = 1, limit = 12 } = parsed.data;
+    const { county, type, specializations, certifications, page = 1, limit: rawLimit = 12 } = parsed.data;
+    const limit = Math.min(rawLimit, 50);
     const offset = (page - 1) * limit;
 
     const conditions = [eq(listingsTable.status, "Published")];
@@ -80,36 +81,47 @@ router.get("/listings", async (req, res) => {
       conditions.push(eq(listingsTable.type, type as "Agency" | "Individual" | "Platform"));
     }
 
+    if (specializations) {
+      const specs = specializations.split(",").map((s) => s.trim()).filter(Boolean);
+      if (specs.length > 0) {
+        conditions.push(
+          or(...specs.map((s) => sql`${listingsTable.specializations}::jsonb @> ${JSON.stringify([s])}::jsonb`))!
+        );
+      }
+    }
+
+    if (certifications) {
+      const certs = certifications.split(",").map((c) => c.trim()).filter(Boolean);
+      if (certs.length > 0) {
+        conditions.push(
+          or(...certs.map((c) => sql`${listingsTable.certifications}::jsonb @> ${JSON.stringify([c])}::jsonb`))!
+        );
+      }
+    }
+
     const whereClause = and(...conditions);
 
-    const allRows = await db
-      .select()
-      .from(listingsTable)
-      .where(whereClause)
-      .orderBy(
-        sql`CASE ${listingsTable.tier} WHEN 'Verified' THEN 0 WHEN 'Featured' THEN 1 ELSE 2 END`,
-        desc(listingsTable.createdAt)
-      );
+    const orderExpr = [
+      sql`CASE ${listingsTable.tier} WHEN 'Verified' THEN 0 WHEN 'Featured' THEN 1 ELSE 2 END`,
+      desc(listingsTable.createdAt),
+    ];
 
-    // Filter by specializations / certifications (JSON array contains)
-    let filtered = allRows;
-    if (specializations) {
-      const specs = specializations.split(",").map((s) => s.trim());
-      filtered = filtered.filter((row) => {
-        const rowSpecs = (row.specializations as string[]) || [];
-        return specs.some((s) => rowSpecs.includes(s));
-      });
-    }
-    if (certifications) {
-      const certs = certifications.split(",").map((c) => c.trim());
-      filtered = filtered.filter((row) => {
-        const rowCerts = (row.certifications as string[]) || [];
-        return certs.some((c) => rowCerts.includes(c));
-      });
-    }
+    const [rows, countResult] = await Promise.all([
+      db
+        .select()
+        .from(listingsTable)
+        .where(whereClause)
+        .orderBy(...orderExpr)
+        .limit(limit)
+        .offset(offset),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(listingsTable)
+        .where(whereClause),
+    ]);
 
-    const total = filtered.length;
-    const listings = filtered.slice(offset, offset + limit).map(serializeListing);
+    const total = countResult[0]?.count ?? 0;
+    const listings = rows.map(serializeListing);
     const totalPages = Math.ceil(total / limit);
 
     res.json({ listings, total, page, totalPages });
@@ -148,26 +160,35 @@ router.get("/listings/featured", async (req, res) => {
 
 router.get("/listings/stats", async (req, res) => {
   try {
-    const rows = await db
-      .select()
-      .from(listingsTable)
-      .where(eq(listingsTable.status, "Published"));
+    const publishedCondition = eq(listingsTable.status, "Published");
 
-    const byCounty: Record<string, number> = {};
-    const byType: Record<string, number> = {};
-    const byTier: Record<string, number> = {};
-
-    for (const row of rows) {
-      byCounty[row.county] = (byCounty[row.county] || 0) + 1;
-      byType[row.type] = (byType[row.type] || 0) + 1;
-      byTier[row.tier] = (byTier[row.tier] || 0) + 1;
-    }
+    const [countyRows, typeRows, tierRows, totalResult] = await Promise.all([
+      db
+        .select({ label: listingsTable.county, count: sql<number>`count(*)::int` })
+        .from(listingsTable)
+        .where(publishedCondition)
+        .groupBy(listingsTable.county),
+      db
+        .select({ label: listingsTable.type, count: sql<number>`count(*)::int` })
+        .from(listingsTable)
+        .where(publishedCondition)
+        .groupBy(listingsTable.type),
+      db
+        .select({ label: listingsTable.tier, count: sql<number>`count(*)::int` })
+        .from(listingsTable)
+        .where(publishedCondition)
+        .groupBy(listingsTable.tier),
+      db
+        .select({ total: sql<number>`count(*)::int` })
+        .from(listingsTable)
+        .where(publishedCondition),
+    ]);
 
     res.json({
-      byCounty: Object.entries(byCounty).map(([label, count]) => ({ label, count })),
-      byType: Object.entries(byType).map(([label, count]) => ({ label, count })),
-      byTier: Object.entries(byTier).map(([label, count]) => ({ label, count })),
-      total: rows.length,
+      byCounty: countyRows,
+      byType: typeRows,
+      byTier: tierRows,
+      total: totalResult[0]?.total ?? 0,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to get listing stats");

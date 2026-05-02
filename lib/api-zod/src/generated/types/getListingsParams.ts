@@ -11,6 +11,13 @@ export type GetListingsParams = {
   type?: string;
   specializations?: string;
   certifications?: string;
+  /**
+   * @minimum 1
+   */
   page?: number;
+  /**
+   * @minimum 1
+   * @maximum 50
+   */
   limit?: number;
 };
