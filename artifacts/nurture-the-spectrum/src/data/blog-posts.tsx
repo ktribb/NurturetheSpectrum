@@ -7,6 +7,7 @@ export interface BlogPost {
   date: string;
   readTime: string;
   excerpt: string;
+  tags: string[];
   content: React.ReactNode;
 }
 
@@ -387,6 +388,7 @@ export const blogPosts: BlogPost[] = [
     readTime: "7 min read",
     excerpt:
       "Looking for an autism or special needs nanny agency in Philadelphia? Here are the top agencies serving Philadelphia, Delaware, Bucks, and Chester Counties — with specializations, certifications, and contact info.",
+    tags: ["Philadelphia", "Nanny Agencies", "ABA Therapy"],
     content: <Post1Content />,
   },
   {
@@ -396,6 +398,7 @@ export const blogPosts: BlogPost[] = [
     readTime: "7 min read",
     excerpt:
       "Looking for an autism or special needs childcare agency in Delaware? Here are the top agencies serving Wilmington, Newark, Dover, and surrounding areas — with specializations, certifications, and contact info.",
+    tags: ["Delaware", "ABA Therapy", "Childcare Agencies"],
     content: <Post2Content />,
   },
   {
@@ -405,6 +408,7 @@ export const blogPosts: BlogPost[] = [
     readTime: "7 min read",
     excerpt:
       "Top autism and special needs childcare agencies in Harford County, Cecil County, and Baltimore County Maryland — including ABA providers, in-home services, and respite care agencies.",
+    tags: ["Maryland", "ABA Therapy", "Childcare Agencies"],
     content: <Post3Content />,
   },
   {
@@ -414,6 +418,7 @@ export const blogPosts: BlogPost[] = [
     readTime: "8 min read",
     excerpt:
       "Top autism and special needs childcare agencies in South Jersey — Camden County, Burlington County, Gloucester County, Atlantic County and beyond. ABA providers, in-home services, and respite care.",
+    tags: ["South Jersey", "Nanny Agencies", "ABA Therapy"],
     content: <Post4Content />,
   },
 ];
