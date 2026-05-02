@@ -35,7 +35,7 @@ The public site allows anonymous visitors to browse published caregiver listings
 
 ### Spoofing
 
-The primary spoofing risk is unauthorized acquisition of admin access. The application uses a custom shared-password admin login rather than per-user identities, so the system must ensure that admin authentication is resistant to guessing, credential leakage, and token theft. Admin session tokens must be unpredictable, scoped to the server, and not exposed unnecessarily to browser-accessible JavaScript.
+The primary spoofing risk is unauthorized acquisition of admin access. The application uses a custom shared-password admin login rather than per-user identities, so the system must ensure that admin authentication is resistant to guessing, credential leakage, and token theft. Admin session tokens must be unpredictable, scoped to the server, and not exposed unnecessarily to browser-accessible JavaScript. Browser-readable access to `/api/admin/login` MUST be restricted to trusted first-party origins so attacker-controlled websites cannot turn arbitrary visitor browsers into distributed password-guessing clients.
 
 ### Tampering
 
@@ -43,7 +43,7 @@ Attackers can tamper with directory data through public submissions or compromis
 
 ### Information Disclosure
 
-The application stores provider contact information and accepts contact form submissions. Public APIs must not expose non-public fields unintentionally, admin exports must remain admin-only, and logs must avoid recording sensitive data beyond what is operationally necessary. Admin credentials and other secrets must not be embedded in committed config or client-exposed paths.
+The application stores provider contact information and accepts contact form submissions. Public APIs must not expose non-public fields unintentionally, admin exports must remain admin-only, and logs must avoid recording sensitive data beyond what is operationally necessary. Admin credentials and other secrets must not be embedded in committed config or client-exposed paths. Listing fields that later become browser URLs, such as `website` and `logoUrl`, must be restricted to safe web schemes before they are stored or rendered.
 
 ### Denial of Service
 
@@ -51,4 +51,4 @@ The public submission and contact endpoints are reachable without authentication
 
 ### Elevation of Privilege
 
-Any weakness in admin authentication becomes full application compromise because admins can publish, modify, import, export, and delete listings. The system must enforce admin authorization on every privileged route, avoid client-side trust in browser-stored bearer credentials, and ensure public content cannot be turned into script execution or credential theft in the admin or public frontend.
+Any weakness in admin authentication becomes full application compromise because admins can publish, modify, import, export, and delete listings. The system must enforce admin authorization on every privileged route, avoid client-side trust in browser-stored bearer credentials, and ensure public content cannot be turned into script execution or credential theft in the admin or public frontend. Untrusted listing content must never be allowed to control `href`, `src`, or other browser-navigation sinks with script-capable schemes.
