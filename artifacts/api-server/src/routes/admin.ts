@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { Router, type Request, type Response, type NextFunction } from "express";
-import rateLimit from "express-rate-limit";
+import { rateLimit } from "express-rate-limit";
 import { db, listingsTable } from "@workspace/db";
 import { eq, desc, sql, inArray } from "drizzle-orm";
 import {
