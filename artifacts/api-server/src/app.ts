@@ -3,9 +3,9 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import { rateLimit } from "express-rate-limit";
-import router from "./routes";
-import { logger } from "./lib/logger";
-import { allowedOrigins, requireSameOrigin } from "./middlewares/origin";
+import router from "./routes/index.js";
+import { logger } from "./lib/logger.js";
+import { allowedOrigins, requireSameOrigin } from "./middlewares/origin.js";
 
 const app: Express = express();
 
