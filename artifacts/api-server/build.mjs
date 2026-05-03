@@ -101,7 +101,10 @@ async function buildAll() {
       "puppeteer-core",
       "electron",
     ],
-    sourcemap: "linked",
+    // Disable source maps: Vercel's nft follows source map references back to
+    // TypeScript source files, then compiles them separately — breaking workspace
+    // package imports at runtime. The esbuild bundle is fully self-contained.
+    sourcemap: false,
     plugins: [
       // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
       esbuildPluginPino({ transports: ["pino-pretty"] })
