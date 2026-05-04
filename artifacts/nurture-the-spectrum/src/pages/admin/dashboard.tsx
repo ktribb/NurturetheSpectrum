@@ -49,7 +49,7 @@ export default function AdminDashboard() {
   const { data: listingsData, isLoading: listingsLoading, refetch } = useAdminGetListings({
     status: statusTab === "All" ? undefined : statusTab,
     page,
-    limit: 50,
+    limit: 100,
   });
 
   // Filter by tier client-side
@@ -103,6 +103,34 @@ export default function AdminDashboard() {
       },
     });
   };
+
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+
+  const handleBulkSetInactive = useCallback(async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setBulkUpdating(true);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`${apiBase}/api/admin/listings/${id}`, {
+            method: "PATCH",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "Inactive" }),
+          })
+        )
+      );
+      toast({ title: `${ids.length} listing${ids.length !== 1 ? "s" : ""} set to inactive` });
+      setSelectedIds(new Set());
+      refetch();
+    } catch {
+      toast({ title: "Network error", description: "Could not reach the server", variant: "destructive" });
+    } finally {
+      setBulkUpdating(false);
+    }
+  }, [selectedIds, refetch, toast]);
 
   const handleBulkDelete = useCallback(async () => {
     const ids = Array.from(selectedIds);
@@ -267,10 +295,20 @@ export default function AdminDashboard() {
                     Clear
                   </Button>
                   <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    disabled={bulkUpdating || bulkDeleting}
+                    onClick={handleBulkSetInactive}
+                  >
+                    <EyeOff className="w-3.5 h-3.5 mr-1.5" />
+                    {bulkUpdating ? "Updating…" : `Disable ${selectedIds.size}`}
+                  </Button>
+                  <Button
                     variant="destructive"
                     size="sm"
                     className="h-8"
-                    disabled={bulkDeleting}
+                    disabled={bulkDeleting || bulkUpdating}
                     onClick={handleBulkDelete}
                   >
                     <Trash2 className="w-3.5 h-3.5 mr-1.5" />
