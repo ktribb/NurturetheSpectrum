@@ -132,6 +132,46 @@ export default function AdminDashboard() {
     }
   }, [selectedIds, refetch, toast]);
 
+  const handleDisableAll = useCallback(async () => {
+    if (!confirm("Set ALL listings to Inactive? This affects every listing matching your current filters.")) return;
+    setBulkUpdating(true);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+      // Fetch all IDs matching current status + tier filters (no pagination limit)
+      const statusParam = statusTab === "All" ? "" : `&status=${statusTab}`;
+      const resp = await fetch(`${apiBase}/api/admin/listings?page=1&limit=9999${statusParam}`, {
+        credentials: "include",
+      });
+      const data = await resp.json();
+      const allIds: number[] = (data.listings ?? [])
+        .filter((l: { id: number; tier: string }) => tierTab === "All" || l.tier === tierTab)
+        .map((l: { id: number }) => l.id);
+
+      if (allIds.length === 0) {
+        toast({ title: "No listings to disable" });
+        return;
+      }
+
+      await Promise.all(
+        allIds.map((id) =>
+          fetch(`${apiBase}/api/admin/listings/${id}`, {
+            method: "PATCH",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "Inactive" }),
+          })
+        )
+      );
+      toast({ title: `${allIds.length} listing${allIds.length !== 1 ? "s" : ""} set to inactive` });
+      setSelectedIds(new Set());
+      refetch();
+    } catch {
+      toast({ title: "Network error", description: "Could not reach the server", variant: "destructive" });
+    } finally {
+      setBulkUpdating(false);
+    }
+  }, [statusTab, tierTab, refetch, toast]);
+
   const handleBulkDelete = useCallback(async () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
@@ -283,6 +323,19 @@ export default function AdminDashboard() {
                     {selectedIds.size} listing{selectedIds.size !== 1 ? "s" : ""} selected
                   </span>
                 )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  disabled={bulkUpdating || bulkDeleting}
+                  onClick={handleDisableAll}
+                  title="Set all listings (across all pages) to Inactive"
+                >
+                  <EyeOff className="w-3.5 h-3.5 mr-1.5" />
+                  {bulkUpdating ? "Updating…" : "Disable All"}
+                </Button>
               </div>
               {selectedIds.size > 0 && (
                 <div className="flex items-center gap-2">
