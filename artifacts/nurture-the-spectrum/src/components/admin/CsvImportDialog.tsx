@@ -131,7 +131,8 @@ export default function CsvImportDialog({ open, onOpenChange, onSuccess }: CsvIm
     if (!csvText) return;
     setImporting(true);
     try {
-      const resp = await fetch("/api/admin/import-csv", {
+      const apiBase = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+      const resp = await fetch(`${apiBase}/api/admin/import-csv`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

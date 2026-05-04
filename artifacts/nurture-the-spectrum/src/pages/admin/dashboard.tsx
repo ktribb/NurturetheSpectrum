@@ -89,7 +89,8 @@ export default function AdminDashboard() {
     if (!confirm(`Delete ${ids.length} selected listing${ids.length !== 1 ? "s" : ""}? This cannot be undone.`)) return;
     setBulkDeleting(true);
     try {
-      const resp = await fetch("/api/admin/listings", {
+      const apiBase = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+      const resp = await fetch(`${apiBase}/api/admin/listings`, {
         method: "DELETE",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -148,7 +149,7 @@ export default function AdminDashboard() {
               <Upload className="w-4 h-4 mr-2" /> Import CSV
             </Button>
             <Button variant="outline" size="sm" asChild>
-              <a href="/api/admin/listings/export" target="_blank" download>
+              <a href={`${(import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "")}/api/admin/listings/export`} target="_blank" download>
                 Export CSV
               </a>
             </Button>
