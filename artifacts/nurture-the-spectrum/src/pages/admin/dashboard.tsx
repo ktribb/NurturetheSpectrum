@@ -186,11 +186,34 @@ export default function AdminDashboard() {
               </TabsList>
 
               {/* Bulk action bar */}
-              {selectedIds.size > 0 && (
-                <div className="flex items-center justify-between mb-3 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg">
-                  <span className="text-sm font-medium text-primary">
-                    {selectedIds.size} listing{selectedIds.size !== 1 ? "s" : ""} selected
-                  </span>
+              <div className="flex items-center justify-between mb-3 min-h-[40px]">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    disabled={!listingsData?.listings.length}
+                    onClick={() => {
+                      const allIds = listingsData?.listings.map((l) => l.id) ?? [];
+                      const allSelected = allIds.every((id) => selectedIds.has(id));
+                      if (allSelected) {
+                        setSelectedIds(new Set());
+                      } else {
+                        setSelectedIds(new Set(allIds));
+                      }
+                    }}
+                  >
+                    {listingsData?.listings.length && listingsData.listings.every((l) => selectedIds.has(l.id))
+                      ? "Deselect All"
+                      : "Select All"}
+                  </Button>
+                  {selectedIds.size > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      {selectedIds.size} listing{selectedIds.size !== 1 ? "s" : ""} selected
+                    </span>
+                  )}
+                </div>
+                {selectedIds.size > 0 && (
                   <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
@@ -198,7 +221,7 @@ export default function AdminDashboard() {
                       className="text-muted-foreground h-8"
                       onClick={() => setSelectedIds(new Set())}
                     >
-                      Clear selection
+                      Clear
                     </Button>
                     <Button
                       variant="destructive"
@@ -211,8 +234,8 @@ export default function AdminDashboard() {
                       {bulkDeleting ? "Deleting…" : `Delete ${selectedIds.size}`}
                     </Button>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               <div className="rounded-md border overflow-x-auto">
                 <Table>
