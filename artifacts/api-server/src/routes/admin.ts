@@ -16,7 +16,36 @@ import {
 const router = Router();
 
 const ADMIN_SESSION_TOKEN = "nts_admin_session";
-const activeSessions = new Set<string>();
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// Stateless signed sessions — works across serverless function instances.
+// Token format: "<expiresAt>:<hmac-sha256-hex>"
+function signSession(expiresAt: number, secret: string): string {
+  return crypto.createHmac("sha256", secret).update(String(expiresAt)).digest("hex");
+}
+
+function createSessionToken(secret: string): string {
+  const expiresAt = Date.now() + SESSION_TTL_MS;
+  const sig = signSession(expiresAt, secret);
+  return `${expiresAt}:${sig}`;
+}
+
+function verifySessionToken(token: string, secret: string): boolean {
+  try {
+    const colon = token.indexOf(":");
+    if (colon === -1) return false;
+    const expiresAt = parseInt(token.slice(0, colon), 10);
+    const sig = token.slice(colon + 1);
+    if (isNaN(expiresAt) || Date.now() > expiresAt) return false;
+    const expected = signSession(expiresAt, secret);
+    const sigBuf = Buffer.from(sig.padEnd(64, "0").slice(0, 64), "hex");
+    const expBuf = Buffer.from(expected, "hex");
+    if (sigBuf.length !== expBuf.length) return false;
+    return crypto.timingSafeEqual(sigBuf, expBuf);
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Sanitize a value for safe inclusion in a CSV cell.
@@ -42,10 +71,6 @@ const loginRateLimiter = rateLimit({
   skipSuccessfulRequests: false,
 });
 
-function generateToken(): string {
-  return crypto.randomBytes(32).toString("hex");
-}
-
 function timingSafeEqual(a: string, b: string): boolean {
   try {
     const aBuf = Buffer.from(a, "utf8");
@@ -61,14 +86,13 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 function extractToken(req: Request): string | null {
-  const cookieToken = req.cookies?.[ADMIN_SESSION_TOKEN];
-  if (cookieToken) return cookieToken;
-  return null;
+  return req.cookies?.[ADMIN_SESSION_TOKEN] ?? null;
 }
 
 function requireAdmin(req: Request, res: Response, next: NextFunction): void {
   const token = extractToken(req);
-  if (!token || !activeSessions.has(token)) {
+  const secret = process.env.ADMIN_PASSWORD;
+  if (!token || !secret || !verifySessionToken(token, secret)) {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
@@ -155,8 +179,7 @@ router.post("/admin/login", loginRateLimiter, async (req, res) => {
       return;
     }
 
-    const token = generateToken();
-    activeSessions.add(token);
+    const token = createSessionToken(adminPassword);
 
     res.cookie(ADMIN_SESSION_TOKEN, token, {
       httpOnly: true,
@@ -174,18 +197,15 @@ router.post("/admin/login", loginRateLimiter, async (req, res) => {
 
 // Admin logout
 router.post("/admin/logout", (req, res) => {
-  const token = extractToken(req);
-  if (token) {
-    activeSessions.delete(token);
-  }
-  res.clearCookie(ADMIN_SESSION_TOKEN);
+  res.clearCookie(ADMIN_SESSION_TOKEN, { sameSite: "none", secure: true });
   res.json({ success: true, message: "Logged out successfully" });
 });
 
 // Check session
 router.get("/admin/me", (req, res) => {
   const token = extractToken(req);
-  const authenticated = !!(token && activeSessions.has(token));
+  const secret = process.env.ADMIN_PASSWORD;
+  const authenticated = !!(token && secret && verifySessionToken(token, secret));
   res.json({ authenticated });
 });
 
