@@ -7,6 +7,7 @@ import {
   useAdminGetDashboard,
   useAdminGetListings,
   useAdminApproveListing,
+  useAdminUpdateListing,
   useAdminDeleteListing,
   useAdminLogout,
   Listing,
@@ -18,7 +19,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LogOut, Users, CheckCircle, Clock, Trash2, Check, Upload, Shield, Star } from "lucide-react";
+import { LogOut, Users, CheckCircle, Clock, Trash2, Check, Upload, Shield, Star, EyeOff, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -38,6 +39,7 @@ export default function AdminDashboard() {
   }, [me, meLoading, meError, setLocation]);
 
   const [statusTab, setStatusTab] = useState<string>("All");
+  const [tierTab, setTierTab] = useState<string>("All");
   const [page, setPage] = useState(1);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -47,13 +49,19 @@ export default function AdminDashboard() {
   const { data: listingsData, isLoading: listingsLoading, refetch } = useAdminGetListings({
     status: statusTab === "All" ? undefined : statusTab,
     page,
-    limit: 20,
+    limit: 50,
   });
 
-  // Clear selection when tab or page changes
-  useEffect(() => { setSelectedIds(new Set()); }, [statusTab, page]);
+  // Filter by tier client-side
+  const filteredListings = tierTab === "All"
+    ? (listingsData?.listings ?? [])
+    : (listingsData?.listings ?? []).filter((l) => l.tier === tierTab);
+
+  // Clear selection when tabs or page changes
+  useEffect(() => { setSelectedIds(new Set()); }, [statusTab, tierTab, page]);
 
   const approveMutation = useAdminApproveListing();
+  const updateMutation = useAdminUpdateListing();
   const deleteMutation = useAdminDeleteListing();
   const logoutMutation = useAdminLogout();
 
@@ -68,8 +76,21 @@ export default function AdminDashboard() {
 
   const handleApprove = (id: number) => {
     approveMutation.mutate({ id }, {
-      onSuccess: () => { toast({ title: "Listing approved" }); refetch(); },
+      onSuccess: () => { toast({ title: "Listing approved and published" }); refetch(); },
     });
+  };
+
+  const handleToggleStatus = (listing: Listing) => {
+    const newStatus = listing.status === "Published" ? "Inactive" : "Published";
+    updateMutation.mutate(
+      { id: listing.id, data: { status: newStatus } },
+      {
+        onSuccess: () => {
+          toast({ title: `Listing ${newStatus === "Published" ? "published" : "set to inactive"}` });
+          refetch();
+        },
+      }
+    );
   };
 
   const handleDelete = (id: number) => {
@@ -136,6 +157,8 @@ export default function AdminDashboard() {
     </Card>
   );
 
+  const allSelected = filteredListings.length > 0 && filteredListings.every((l) => selectedIds.has(l.id));
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white border-b sticky top-0 z-10">
@@ -177,173 +200,206 @@ export default function AdminDashboard() {
             <CardTitle>Manage Listings</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs value={statusTab} onValueChange={(v) => { setStatusTab(v); setPage(1); }}>
-              <TabsList className="mb-4">
-                <TabsTrigger value="All">All</TabsTrigger>
-                <TabsTrigger value="Pending">Pending</TabsTrigger>
-                <TabsTrigger value="Published">Published</TabsTrigger>
-                <TabsTrigger value="Inactive">Inactive</TabsTrigger>
-              </TabsList>
+            {/* Status filter */}
+            <div className="mb-2">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1.5">Status</p>
+              <Tabs value={statusTab} onValueChange={(v) => { setStatusTab(v); setPage(1); }}>
+                <TabsList>
+                  <TabsTrigger value="All">All</TabsTrigger>
+                  <TabsTrigger value="Pending">Pending</TabsTrigger>
+                  <TabsTrigger value="Published">Published</TabsTrigger>
+                  <TabsTrigger value="Inactive">Inactive</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
 
-              {/* Bulk action bar */}
-              <div className="flex items-center justify-between mb-3 min-h-[40px]">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8"
-                    disabled={!listingsData?.listings.length}
-                    onClick={() => {
-                      const allIds = listingsData?.listings.map((l) => l.id) ?? [];
-                      const allSelected = allIds.every((id) => selectedIds.has(id));
-                      if (allSelected) {
-                        setSelectedIds(new Set());
-                      } else {
-                        setSelectedIds(new Set(allIds));
-                      }
-                    }}
-                  >
-                    {listingsData?.listings.length && listingsData.listings.every((l) => selectedIds.has(l.id))
-                      ? "Deselect All"
-                      : "Select All"}
-                  </Button>
-                  {selectedIds.size > 0 && (
-                    <span className="text-sm text-muted-foreground">
-                      {selectedIds.size} listing{selectedIds.size !== 1 ? "s" : ""} selected
-                    </span>
-                  )}
-                </div>
+            {/* Tier filter */}
+            <div className="mb-4">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1.5">Tier</p>
+              <Tabs value={tierTab} onValueChange={(v) => { setTierTab(v); setPage(1); }}>
+                <TabsList>
+                  <TabsTrigger value="All">All</TabsTrigger>
+                  <TabsTrigger value="Free">Free</TabsTrigger>
+                  <TabsTrigger value="Featured">
+                    <Star className="w-3 h-3 mr-1 text-accent" />
+                    Featured
+                  </TabsTrigger>
+                  <TabsTrigger value="Verified">
+                    <CheckCircle className="w-3 h-3 mr-1 text-primary" />
+                    Verified
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Bulk action bar */}
+            <div className="flex items-center justify-between mb-3 min-h-[40px]">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  disabled={filteredListings.length === 0}
+                  onClick={() => {
+                    if (allSelected) {
+                      setSelectedIds(new Set());
+                    } else {
+                      setSelectedIds(new Set(filteredListings.map((l) => l.id)));
+                    }
+                  }}
+                >
+                  {allSelected ? "Deselect All" : "Select All"}
+                </Button>
                 {selectedIds.size > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground h-8"
-                      onClick={() => setSelectedIds(new Set())}
-                    >
-                      Clear
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="h-8"
-                      disabled={bulkDeleting}
-                      onClick={handleBulkDelete}
-                    >
-                      <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                      {bulkDeleting ? "Deleting…" : `Delete ${selectedIds.size}`}
-                    </Button>
-                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {selectedIds.size} listing{selectedIds.size !== 1 ? "s" : ""} selected
+                  </span>
                 )}
               </div>
+              {selectedIds.size > 0 && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground h-8"
+                    onClick={() => setSelectedIds(new Set())}
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-8"
+                    disabled={bulkDeleting}
+                    onClick={handleBulkDelete}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                    {bulkDeleting ? "Deleting…" : `Delete ${selectedIds.size}`}
+                  </Button>
+                </div>
+              )}
+            </div>
 
-              <div className="rounded-md border overflow-x-auto">
-                <Table>
-                  <TableHeader>
+            <div className="rounded-md border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10" />
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Tier</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {listingsLoading ? (
                     <TableRow>
-                      <TableHead className="w-10" />
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Tier</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableCell colSpan={7} className="text-center py-8">Loading listings...</TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {listingsLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8">Loading listings...</TableCell>
-                      </TableRow>
-                    ) : listingsData?.listings.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                          No listings found in this category.
+                  ) : filteredListings.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        No listings found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredListings.map((listing: Listing) => (
+                      <TableRow
+                        key={listing.id}
+                        className={selectedIds.has(listing.id) ? "bg-primary/5" : undefined}
+                        data-state={selectedIds.has(listing.id) ? "selected" : undefined}
+                      >
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.has(listing.id)}
+                            onCheckedChange={() => toggleOne(listing.id)}
+                            aria-label={`Select ${listing.name}`}
+                          />
                         </TableCell>
-                      </TableRow>
-                    ) : (
-                      listingsData?.listings.map((listing: Listing) => (
-                        <TableRow
-                          key={listing.id}
-                          className={selectedIds.has(listing.id) ? "bg-primary/5" : undefined}
-                          data-state={selectedIds.has(listing.id) ? "selected" : undefined}
-                        >
-                          <TableCell>
-                            <Checkbox
-                              checked={selectedIds.has(listing.id)}
-                              onCheckedChange={() => toggleOne(listing.id)}
-                              aria-label={`Select ${listing.name}`}
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium">{listing.name}</TableCell>
-                          <TableCell>{listing.type}</TableCell>
-                          <TableCell>{listing.city}, {listing.county}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={listing.status === "Published" ? "default" : listing.status === "Pending" ? "secondary" : "outline"}
-                              className={listing.status === "Published" ? "bg-green-600" : ""}
-                            >
-                              {listing.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={
-                                listing.tier === "Featured" ? "border-accent text-accent-foreground" :
-                                listing.tier === "Verified" ? "border-primary text-primary" : ""
-                              }
-                            >
-                              {listing.tier}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              {listing.status === "Pending" && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-8 w-8 p-0"
-                                  onClick={() => handleApprove(listing.id)}
-                                  title="Approve"
-                                >
-                                  <Check className="h-4 w-4 text-green-600" />
-                                </Button>
-                              )}
+                        <TableCell className="font-medium">{listing.name}</TableCell>
+                        <TableCell>{listing.type}</TableCell>
+                        <TableCell>{listing.city}, {listing.county}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={listing.status === "Published" ? "default" : listing.status === "Pending" ? "secondary" : "outline"}
+                            className={listing.status === "Published" ? "bg-green-600" : ""}
+                          >
+                            {listing.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={
+                              listing.tier === "Featured" ? "border-accent text-accent-foreground" :
+                              listing.tier === "Verified" ? "border-primary text-primary" : ""
+                            }
+                          >
+                            {listing.tier}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            {listing.status === "Pending" && (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                                onClick={() => handleDelete(listing.id)}
-                                title="Delete"
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleApprove(listing.id)}
+                                title="Approve"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Check className="h-4 w-4 text-green-600" />
                               </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                            )}
+                            {listing.status !== "Pending" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleToggleStatus(listing)}
+                                title={listing.status === "Published" ? "Set Inactive" : "Publish"}
+                              >
+                                {listing.status === "Published"
+                                  ? <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                  : <Eye className="h-4 w-4 text-green-600" />
+                                }
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              onClick={() => handleDelete(listing.id)}
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
 
-              {listingsData && listingsData.totalPages > 1 && (
-                <div className="flex justify-between items-center mt-4">
-                  <span className="text-sm text-muted-foreground">
-                    Page {page} of {listingsData.totalPages}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-                      Previous
-                    </Button>
-                    <Button variant="outline" size="sm" disabled={page === listingsData.totalPages} onClick={() => setPage((p) => p + 1)}>
-                      Next
-                    </Button>
-                  </div>
+            {listingsData && listingsData.totalPages > 1 && (
+              <div className="flex justify-between items-center mt-4">
+                <span className="text-sm text-muted-foreground">
+                  Page {page} of {listingsData.totalPages}
+                </span>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+                    Previous
+                  </Button>
+                  <Button variant="outline" size="sm" disabled={page === listingsData.totalPages} onClick={() => setPage((p) => p + 1)}>
+                    Next
+                  </Button>
                 </div>
-              )}
-            </Tabs>
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
