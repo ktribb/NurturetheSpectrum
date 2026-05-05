@@ -27,6 +27,47 @@ const COVER_STYLES = [
     icon: "🌅",
     pattern: "South Jersey",
   },
+  // After the Diagnosis series
+  {
+    gradient: "from-[hsl(260,45%,35%)] to-[hsl(280,40%,55%)]",
+    icon: "🧩",
+    pattern: "After the Diagnosis",
+  },
+  {
+    gradient: "from-[hsl(265,42%,33%)] to-[hsl(285,38%,52%)]",
+    icon: "💛",
+    pattern: "After the Diagnosis",
+  },
+  {
+    gradient: "from-[hsl(255,48%,36%)] to-[hsl(275,42%,56%)]",
+    icon: "🔑",
+    pattern: "After the Diagnosis",
+  },
+  {
+    gradient: "from-[hsl(270,44%,34%)] to-[hsl(290,39%,53%)]",
+    icon: "🤝",
+    pattern: "After the Diagnosis",
+  },
+  {
+    gradient: "from-[hsl(258,46%,35%)] to-[hsl(278,41%,54%)]",
+    icon: "🏠",
+    pattern: "After the Diagnosis",
+  },
+  {
+    gradient: "from-[hsl(263,43%,33%)] to-[hsl(283,40%,52%)]",
+    icon: "⭐",
+    pattern: "After the Diagnosis",
+  },
+  {
+    gradient: "from-[hsl(268,45%,36%)] to-[hsl(288,41%,55%)]",
+    icon: "📈",
+    pattern: "After the Diagnosis",
+  },
+  {
+    gradient: "from-[hsl(262,44%,34%)] to-[hsl(282,40%,53%)]",
+    icon: "❤️",
+    pattern: "After the Diagnosis",
+  },
 ];
 
 // Collect all unique tags
@@ -241,7 +282,7 @@ export default function Blog() {
                 Browse by Region
               </h3>
               <ul className="space-y-2">
-                {["Philadelphia", "Delaware", "Maryland", "South Jersey"].map((region) => (
+                {["Philadelphia", "Delaware", "Maryland", "South Jersey", "After the Diagnosis"].map((region) => (
                   <li key={region}>
                     <button
                       onClick={() => setActiveTag(region)}
