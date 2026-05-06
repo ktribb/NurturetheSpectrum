@@ -172,6 +172,45 @@ export default function AdminDashboard() {
     }
   }, [statusTab, tierTab, refetch, toast]);
 
+  const handlePublishAll = useCallback(async () => {
+    if (!confirm("Publish ALL listings? This affects every listing matching your current filters.")) return;
+    setBulkUpdating(true);
+    try {
+      const apiBase = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+      const statusParam = statusTab === "All" ? "" : `&status=${statusTab}`;
+      const resp = await fetch(`${apiBase}/api/admin/listings?page=1&limit=9999${statusParam}`, {
+        credentials: "include",
+      });
+      const data = await resp.json();
+      const allIds: number[] = (data.listings ?? [])
+        .filter((l: { id: number; tier: string }) => tierTab === "All" || l.tier === tierTab)
+        .map((l: { id: number }) => l.id);
+
+      if (allIds.length === 0) {
+        toast({ title: "No listings to publish" });
+        return;
+      }
+
+      await Promise.all(
+        allIds.map((id) =>
+          fetch(`${apiBase}/api/admin/listings/${id}`, {
+            method: "PATCH",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "Published" }),
+          })
+        )
+      );
+      toast({ title: `${allIds.length} listing${allIds.length !== 1 ? "s" : ""} published` });
+      setSelectedIds(new Set());
+      refetch();
+    } catch {
+      toast({ title: "Network error", description: "Could not reach the server", variant: "destructive" });
+    } finally {
+      setBulkUpdating(false);
+    }
+  }, [statusTab, tierTab, refetch, toast]);
+
   const handleBulkDelete = useCallback(async () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
@@ -330,8 +369,19 @@ export default function AdminDashboard() {
                   size="sm"
                   className="h-8"
                   disabled={bulkUpdating || bulkDeleting}
+                  onClick={handlePublishAll}
+                  title="Publish all listings matching current filters"
+                >
+                  <Eye className="w-3.5 h-3.5 mr-1.5 text-green-600" />
+                  {bulkUpdating ? "Updating…" : "Publish All"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  disabled={bulkUpdating || bulkDeleting}
                   onClick={handleDisableAll}
-                  title="Set all listings (across all pages) to Inactive"
+                  title="Set all listings matching current filters to Inactive"
                 >
                   <EyeOff className="w-3.5 h-3.5 mr-1.5" />
                   {bulkUpdating ? "Updating…" : "Disable All"}
